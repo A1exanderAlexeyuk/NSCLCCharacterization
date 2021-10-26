@@ -9,7 +9,7 @@ generateRegimensStats <- function(connection,
                              #databaseId, 
                              #packageName
                              ){
-  sqlFileName <- "linesOfT.sql"
+  sqlFileName <- "Lines_of_therapy_stats.sql"
   pathToSql <- system.file("sql", "sql_server", sqlFileName, package = packageName)
   sql <- readChar(pathToSql, file.info(pathToSql)$size)
       sql_tmp <- SqlRender::render(sql, 
