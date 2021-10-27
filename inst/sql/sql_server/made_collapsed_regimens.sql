@@ -8,7 +8,6 @@ with ctt as (select r1.person_id, r1.regimen_start_date, r1.regimen_end_date,  r
 			 r1.regimen_end_date
 			  group by r1.person_id, r1.regimen_start_date, r1.regimen_end_date, r1.regimen
 			  order by 1,2,3,4),
-			  
 cte as (select *, 
 coalesce(lag(regimen, 1) over (order by person_id) != regimen, TRUE) as New_regimen
 from ctt),
@@ -23,9 +22,17 @@ ON cte.person_id = ctt.person_id
 AND cte.regimen = ctt.regimen 
 AND cte.regimen_start_date = ctt.regimen_start_date_new 
 AND cte.regimen_end_date <= ctt.regimen_end_date_new 
-order by 1,2,3)
+order by 1,2,3),
+sss1 as (
+select person_id, regimen, regimen_start_date_new as regimen_start_date, 
+regimen_end_date_new as regimen_end_date,
+row_number() over (PARTITION BY  person_id
+Order by person_id, regimen_start_date) as Line_of_therapy 
+from sss where New_regimen != false)
 
-select person_id, regimen, regimen_start_date_new as regimen_start_date, regimen_end_date_new as regimen_end_date,
-row_number() over (PARTITION BY  New_regimen,person_id
-Order by person_id, regimen_start_date) as Line_of_therapy
-from sss where New_regimen != false 
+select *, 
+	case when Line_of_therapy != 1 then 
+	abs(coalesce(lag(regimen_end_date, 1) over (order by person_id, regimen))
+	                                                     - regimen_start_date) 
+	else -1 end as interval_beetwen_lines
+from sss1 order by 5
