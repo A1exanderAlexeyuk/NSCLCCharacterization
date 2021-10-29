@@ -54,14 +54,14 @@ temp_1 as 	(select   r1.person_id, r1.regimen_start_date,
   	  		  min(r2.regimen_start_date) as regimen_start_date_new,
   			  max(r2.regimen_end_date) as regimen_end_date_new, 
   			  r1.cohort_definition_id, r1.death_date,  r1.observation_period_end_date, 
-  			  r1.gender, r1.year_of_birth
+  			  r1.gender, r1.year_of_birth, r1.cohort_start_date
   			 FROM cte r1
   			  left join cte r2 on r1.person_id = r2.person_id 
   			 AND r2.regimen_start_date <= r1.regimen_start_date
   			 AND r2.regimen_end_date <= r1.regimen_end_date
   			  group by r1.person_id, r1.regimen_start_date, r1.regimen_end_date, 
   			  r1.regimen,  r1.cohort_definition_id, r1.death_date,   
-  			  r1.observation_period_end_date, r1.gender, r1.year_of_birth
+  			  r1.observation_period_end_date, r1.gender, r1.year_of_birth, r1.cohort_start_date
   			  order by 5,1,2,3,7),
 			  
 
@@ -80,7 +80,7 @@ temp_2 as (select temp_1.cohort_definition_id, temp_1.person_id,
            coalesce(lag(temp_1.regimen, 1) over 
                     (order by temp_1.person_id) != temp_1.regimen, TRUE) as New_regimen,
            temp_1.regimen_start_date_new  ,temp_1.regimen_end_date_new,
-           temp_1.gender, temp_1.year_of_birth
+           temp_1.gender, temp_1.year_of_birth, temp_1.cohort_start_date
            FROM temp_1   join temp_1 t
            ON temp_1.person_id = t.person_id 
            AND temp_1.regimen = t.regimen 
@@ -104,7 +104,8 @@ temp_3 as (
       regimen_end_date_new as regimen_end_date,
       row_number() over (PARTITION BY  person_id
       Order by person_id, regimen_start_date) as Line_of_therapy,
-       gender,year_of_birth,	death_date, observation_period_end_date 
+       gender,year_of_birth,	death_date, observation_period_end_date,
+	cohort_start_date
       FROM temp_2 where New_regimen != false
       order by cohort_definition_id, 2, 4, 6)
 
@@ -114,6 +115,7 @@ CREATE TABLE  @cohort_database_schema.@regimenandlines
 
 ( 
     cohort_definition_id int,
+    cohort_start_date date,
     person_id bigint,
     regimen text,
     regimen_start_date date,
