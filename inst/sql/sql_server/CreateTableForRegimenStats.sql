@@ -32,8 +32,7 @@ with cte as (select DISTINCT c.cohort_definition_id, c.subject_id as person_id,
 			
 )
 temp_0 as (select person_id, regimen_start_date, 
-        coalesce(regimen_end_date, observation_period_end_date, cohort_end_date,
-        death_date) as  --should come up with the place!!!
+        coalesce(regimen_end_date, regimen_start_date) as  --should come up with the place!!!
        	 regimen_end_date, regimen, cohort_definition_id, cohort_start_date, 
         cohort_end_date, death_date, observation_period_end_date, gender,
         year_of_birth FROM cte),
