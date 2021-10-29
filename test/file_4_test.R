@@ -51,13 +51,14 @@ generateTimeToEvent <- function(connection,
 
 
 
+
 generateLinesOfTreatment <- function(connection, 
                                     cohortDatabaseSchema, 
                                     regimenTable 
                                     ){
   
   sql <- readSql("regimen_table_test.sql")
-  sql_tmp <- SqlRender::render(sql, 
+  sql_tmp <- SqlRender::render(sql = sql, 
                                cohort_database_schema = cohortDatabaseSchema,
                                regimenTable = regimenTable 
                                )
@@ -65,3 +66,5 @@ generateLinesOfTreatment <- function(connection,
   
   
 }
+
+
