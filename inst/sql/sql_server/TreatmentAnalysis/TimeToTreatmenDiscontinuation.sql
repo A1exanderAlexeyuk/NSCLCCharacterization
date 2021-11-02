@@ -55,11 +55,11 @@ WITH init_data AS (
                   )
 
 
-SELECT  Line_of_therapy,
-		--value
-      ROUND (AVG(q3) - AVG(q1),1) AS IQR,
-       ROUND (MIN(value),1) AS minimum,
-       ROUND (AVG(q1),1) AS q1,
+SELECT  cohort_definition_id,
+        Line_of_therapy,
+        ROUND (AVG(q3) - AVG(q1),1) AS IQR,
+        ROUND (MIN(value),1) AS minimum,
+        ROUND (AVG(q1),1) AS q1,
        ROUND (AVG(median),1) AS median,
        ROUND (AVG(q3),1) AS q3,
        ROUND (MAX(value),1) AS maximum,

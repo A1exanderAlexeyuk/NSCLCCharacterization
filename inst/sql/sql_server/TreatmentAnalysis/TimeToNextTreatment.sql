@@ -37,6 +37,9 @@ WITH init_data AS (
 
                              AVG(value) AS Mean,
 
+			power((value - avg(value) OVER (PARTITION BY cohort_definition_id,
+				Line_of_therapy)), 2) / (total -1)
+		 						as Variance,
 
 
 
@@ -45,15 +48,14 @@ WITH init_data AS (
 
                   )
 SELECT cohort_definition_id,
-       AVG(q3) - AVG(q1) AS IQR,
-       MIN(value) AS minimum,
-       AVG(q1) AS q1,
-       AVG(median) AS median,
-       AVG(q3) AS q3,
-       MAX(value) AS maximum,
-       Mean,
-
-       as StD,
+       ROUND (AVG(q3) - AVG(q1),1) AS IQR,
+       ROUND (MIN(value),1) AS minimum,
+       ROUND (AVG(q1),1) AS q1,
+       ROUND (AVG(median),1) AS median,
+       ROUND (AVG(q3),1) AS q3,
+       ROUND (MAX(value),1) AS maximum,
+       ROUND (AVG(mean) ,1) as Mean,
+       ROUND (sqrt(SUM(Variance)), 1) as StD
        'Time_to_Next_Treatment' AS analysis_name
 FROM quartiles
 GROUP BY 1;
