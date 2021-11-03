@@ -6,8 +6,8 @@ with temp as (select DISTINCT c.cohort_definition_id, c.subject_id as person_id,
             c.cohort_start_date, c.cohort_end_date,
             op.observation_period_end_date,
               d.death_date, regimen_start_date, regimen_end_date, regimen
-  			  FROM @cohortDatabaseSchema.@cohortTable c
-          LEFT JOIN @cohortDatabaseSchema.@regimenIngredientsTable r
+  			  FROM @cohortDatabaseSchema..@cohortTable c
+          LEFT JOIN @cohortDatabaseSchema..@regimenIngredientsTable r
             on r.person_id = c.subject_id
             and r.regimen_start_date >= DATEADD(day, -14, c.cohort_start_date)
             and r.regimen_end_date >= c.cohort_start_date
@@ -16,7 +16,7 @@ with temp as (select DISTINCT c.cohort_definition_id, c.subject_id as person_id,
             on op.person_id = c.subject_id
             and op.observation_period_start_date <= c.cohort_start_date
             and op.observation_period_end_date >= c.cohort_end_date
-          LEFT JOIN @cdmDatabaseSchema.@deathTable d on d.person_id = c.subject_id
+          LEFT JOIN @cdmDatabaseSchema.death d on d.person_id = c.subject_id
           LEFT JOIN @cdmDatabaseSchema.person p on c.subject_id = p.person_id
           ORDER BY c.cohort_definition_id, c.subject_id, r.regimen_start_date),
 
@@ -67,8 +67,12 @@ temp_3 as (select cohort_definition_id, person_id, regimen,
             from temp_2 where New_regimen != false
             order by cohort_definition_id, regimen_start_date, Line_of_therapy)
 
-DROP TABLE IF EXISTS @cohort_database_schema.regimen_stats;
-CREATE TABLE @cohort_database_schema.regimen_stats AS
+
+
+-- creation a table for analysis
+
+DROP TABLE IF EXISTS @cohortDatabaseSchema..@regimenStatsTable;
+CREATE TABLE @cohortDatabaseSchema..@regimenStatsTable AS
 
 SELECT temp_3.cohort_definition_id,
        temp_3.person_id,
