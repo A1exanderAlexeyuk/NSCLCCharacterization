@@ -4,7 +4,7 @@ generateSurvival <- function(connection,
                              cohortDatabaseSchema,
                              cohortTable,
                              targetIds,
-                             outcomeIds,
+                             outcomeId,
                              databaseId,
                              packageName){
 
@@ -15,16 +15,17 @@ generateSurvival <- function(connection,
 
   surv_outputs <- purrr::map_df(targetIds, function(targetId){
 
-    purrr::map_df(outcomeIds, function(outcomeId){
-
       sql_tmp <- SqlRender::render(sql,
                                    cohort_database_schema = cohortDatabaseSchema,
                                    cohort_table = cohortTable,
                                    outcome_id = outcomeId,
                                    target_id = targetId)
-      sql_tmp <- SqlRender::translate(sql_tmp, targetDialect = connection@dbms)
+      sql_tmp <- SqlRender::translate(sql = sql_tmp,
+                                      targetDialect = connection@dbms)
 
-      km_raw <- DatabaseConnector::querySql(connection, sql_tmp, snakeCaseToCamelCase = T)
+      km_raw <- DatabaseConnector::querySql(connection = connection,
+                                            sql = sql_tmp,
+                                            snakeCaseToCamelCase = T)
 
       ## edit
       if(nrow(km_raw) < 100 | length(km_raw$event[km_raw$event == 1]) < 1){return(NULL)}
@@ -43,41 +44,35 @@ generateSurvival <- function(connection,
                  lower = surv_info$lower, upper = surv_info$upper, databaseId = databaseId)
 
 
-    })
+
   })
 }
 
 #' @export
 generateTimeToTreatmenInitiationStatistics <- function(connection,
-                                cohortDatabaseSchema,
-                                cohortTable,
-                                targetIds,
-                                outcomeIds,
-                                databaseId,
-                                packageName){
+                                                      cohortDatabaseSchema,
+                                                      cohortTable,
+                                                      targetIds,
+                                                      outcomeId
+                                                      ){
 
-  sqlFileName <- "TimeToTreatmentInitiation.sql"
-
-  pathToSql <- system.file("sql", "sql_server", sqlFileName, package = packageName)
-
-  sql <- readChar(pathToSql, file.info(pathToSql)$size)
+  sql <- SqlRender::readSql(file.path(getPathToTreatmentStats(),
+                                      "TimeToTreatmentInitiation.sql"))
 
   surv_outputs <- purrr::map_df(targetIds, function(targetId){
 
-    purrr::map_df(outcomeIds, function(outcomeId){
-
-      sql_tmp <- SqlRender::render(sql,
+      sql_tmp <- SqlRender::render(sql = sql,
                                    cohort_database_schema = cohortDatabaseSchema,
                                    cohort_table = cohortTable,
                                    outcome_id = outcomeId,
                                    target_id = targetId)
 
-      sql_tmp <- SqlRender::translate(sql_tmp,
+      sql_tmp <- SqlRender::translate(sql = sql_tmp,
                                       targetDialect = connection@dbms)
 
-      timeToEvent <- data.frame(DatabaseConnector::querySql(connection,
-                                                    sql_tmp,
-                                                    snakeCaseToCamelCase = T))
-    })
+      timeToTreatmentInitiation <- data.frame(DatabaseConnector::querySql(connection = connection,
+                                                   sql = sql_tmp,
+                                                   snakeCaseToCamelCase = T))
+
   })
 }
