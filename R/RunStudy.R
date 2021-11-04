@@ -73,13 +73,32 @@ runStudy <- function(connectionDetails = NULL,
                        oracleTempSchema = oracleTempSchema,
                        cohortDatabaseSchema = cohortDatabaseSchema,
                        cohortTable = cohortStagingTable,
-                       cohortIds = outcomeCohortIds,
+                       cohortIds = targetCohortIds,
                        minCellCount = minCellCount,
                        createCohortTable = TRUE,
                        generateInclusionStats = FALSE,
                        incremental = incremental,
                        incrementalFolder = incrementalFolder,
                        inclusionStatisticsFolder = exportFolder)
+
+  # Create the feature cohorts
+  ParallelLogger::logInfo("**********************************************************")
+  ParallelLogger::logInfo(" ---- Creating feature cohorts ---- ")
+  ParallelLogger::logInfo("**********************************************************")
+  instantiateCohortSet(connectionDetails = connectionDetails,
+                       connection = connection,
+                       cdmDatabaseSchema = cdmDatabaseSchema,
+                       oracleTempSchema = oracleTempSchema,
+                       cohortDatabaseSchema = cohortDatabaseSchema,
+                       cohortTable = cohortStagingTable,
+                       cohortIds = outcomeCohortIds,
+                       minCellCount = minCellCount,
+                       createCohortTable = FALSE,
+                       generateInclusionStats = FALSE,
+                       incremental = incremental,
+                       incrementalFolder = incrementalFolder,
+                       inclusionStatisticsFolder = exportFolder)
+
 
   # Copy and censor cohorts to the final table
   ParallelLogger::logInfo("**********************************************************")
@@ -93,26 +112,7 @@ runStudy <- function(connectionDetails = NULL,
                        targetIds = targetCohortIds,
                        oracleTempSchema = oracleTempSchema)
 
-  # # Compute the features
-  # ParallelLogger::logInfo("**********************************************************")
-  # ParallelLogger::logInfo(" ---- Create feature proportions ---- ")
-  # ParallelLogger::logInfo("**********************************************************")
-  # createFeatureProportions(connection = connection,
-  #                          cohortDatabaseSchema = cohortDatabaseSchema,
-  #                          cohortStagingTable = cohortStagingTable,
-  #                          cohortTable = cohortTable,
-  #                          featureSummaryTable = featureSummaryTable,
-  #                          oracleTempSchema = oracleTempSchema)
-  #
-  # ParallelLogger::logInfo("Saving database metadata")
-  # database <- data.frame(databaseId = databaseId,
-  #                        databaseName = databaseName,
-  #                        description = databaseDescription,
-  #                        vocabularyVersion = getVocabularyInfo(connection = connection,
-  #                                                              cdmDatabaseSchema = cdmDatabaseSchema,
-  #                                                              oracleTempSchema = oracleTempSchema),
-  #                        isMetaAnalysis = 0)
-  # writeToCsv(database, file.path(exportFolder, "database.csv"))
+
 
   # Counting staging cohorts ---------------------------------------------------------------
   ParallelLogger::logInfo("Counting staging cohorts")
@@ -154,7 +154,7 @@ runStudy <- function(connectionDetails = NULL,
 
   # Generate survival info -----------------------------------------------------------------
 
-  ParallelLogger::logInfo("Generating time to event data")
+  ParallelLogger::logInfo("Generating survival info")
   targetIds <- allStudyCohorts[[2]][1:3] #check cohorts!
 
   KMOutcomes <- getFeatures()
@@ -176,6 +176,9 @@ runStudy <- function(connectionDetails = NULL,
              targetId = SurvivalInfo$targetId)
 
   # Generate treatment outcomes info -----------------------------------------------------
+  ParallelLogger::logInfo("**********************************************************")
+  ParallelLogger::logInfo(" ---- Treatment statistics  ---- ")
+  ParallelLogger::logInfo("**********************************************************")
   # time to treatment initiation
   timeToTI <- generateTimeToTreatmenInitiationStatistics(connection = connection,
                                                          cohortDatabaseSchema,
