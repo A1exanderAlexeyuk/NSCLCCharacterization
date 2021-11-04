@@ -1,0 +1,7 @@
+name,atlasName,atlasId,cohortId
+101,[LungCancer T1] Metastatic NSCLC (mNSCLC),619,101
+102,[LungCancer T2] Metastatic NSCLC without Liver Metastasis (NSCLC-Non-Liver Met),618,102
+103,[LungCancer T3] Metastatic NSCLC with Liver Metastasis (NSCLC-Liver Met),626,103
+104,[LungCancer T4] Metastatic NSCLC (mNSCLC) ConditionIndex,624,104
+105,[LungCancer T5] Metastatic NSCLC without Liver Metastasis (NSCLC-Non-Liver Met) ConditionIndex,622,105
+106,[LungCancer T6] Metastatic NSCLC with Liver Metastasis (NSCLC-Liver Met) ConditionIndex,623,106
