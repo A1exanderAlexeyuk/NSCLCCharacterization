@@ -9,20 +9,23 @@ getAtEventDistribution <- function(connection,
                                    packageName,
                                    analysisName){
   targetIds <- paste(targetIds, collapse = ', ')
-  if(length(outcomeId) == 0){
-    sqlFileName <- paste(analysisName, 'sql', sep='.')
-  }
-  else{
-    sqlFileName <- paste('TimeToEvent', 'sql', sep='.')
-  }
+
+  sqlFileName <- paste(analysisName, 'sql', sep='.')
+
   analysisName <- substring(SqlRender::camelCaseToTitleCase(analysisName), 2)
-  pathToSql <- system.file("sql", "sql_server", "distributions", sqlFileName,
+
+  pathToSql <- system.file("sql",
+                           "sql_server",
+                           "distributions",
+                           sqlFileName,
                            package = packageName)
+
   pathToAggregSql <- system.file("sql",
                                  "sql_server",
                                  "distributions",
                                  'DistributiveStatistics.sql',
                                  package = packageName)
+
   sql <- readChar(pathToSql, file.info(pathToSql)$size)
   sqlAggreg <- readChar(pathToAggregSql, file.info(pathToAggregSql)$size)
   sql <- paste0(sql, sqlAggreg)
@@ -31,7 +34,6 @@ getAtEventDistribution <- function(connection,
                            cohort_table = cohortTable,
                            target_ids = targetIds,
                            analysis_name = analysisName,
-                           outcome_id = outcomeId,
                            warnOnMissingParameters = FALSE)
   sql <- SqlRender::translate(sql, targetDialect = connection@dbms)
 
@@ -41,7 +43,7 @@ getAtEventDistribution <- function(connection,
 
   if (nrow(data) == 0) {
     ParallelLogger::logWarn("There is NO data for atEventDistribution")
-    df <- data.frame(matrix(nrow = 0, ncol = 9))
+    df <- data.frame(matrix(nrow = 0, ncol = 10))
     colnames(df) <- c("cohortDefinitionId",
                       "iqr",
                       "minimum",
@@ -49,8 +51,8 @@ getAtEventDistribution <- function(connection,
                       "median",
                       "q3",
                       "maximum",
-                      "Mean",
-                      "StD",
+                      "mean",
+                      "std",
                       "analysisName")
     return(df)
   }

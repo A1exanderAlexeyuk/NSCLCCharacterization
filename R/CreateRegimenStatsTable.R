@@ -4,9 +4,9 @@
 #' Computes features using all drugs, conditions, procedures, etc. observed on or prior to the cohort
 #' index date.
 #'
-#' @template Connection
+#' @template connection
 #'
-#' @template CdmDatabaseSchema
+#' @template cdmDatabaseSchema
 #'
 #' @template cohortDatabaseSchema
 #'
@@ -21,7 +21,8 @@
 #' @return
 #' A data frame with cohort characteristics.
 #'
-#' @export
+#' @expor
+#'
 createRegimenStats <- function( connection,
                                 cdmDatabaseSchema,
                                 cohortDatabaseSchema,
@@ -47,3 +48,33 @@ createRegimenStats <- function( connection,
   DatabaseConnector::executeSql(connection = connection,
                                 sql = sqlTranslated)
 }
+
+#' @export
+createCategorizedRegimensTable <- function( connection,
+                                            cohortDatabaseSchema,
+                                            cohortTable,
+                                            regimenStatsTable,
+                                            targetIds){
+
+  sql <- SqlRender::readSql(file.path(getPathToTreatmentStats(),
+                                      "RegimenCategories.sql"))
+
+  categorizedRegimensOutput <- purrr::map_df(targetIds, function(targetId){
+
+    sqlTmp <- SqlRender::render(sql = sql,
+                                cohortDatabaseSchema = cohortDatabaseSchema,
+                                cohortTable = cohortTable,
+                                targetId = targetId)
+
+    sqlTmp <- SqlRender::translate(sql = sqlTmp,
+                                   targetDialect = connection@dbms)
+
+    as.data.frame(DatabaseConnector::querySql(connection = connection,
+                                           sql = sqlTmp,
+                                           snakeCaseToCamelCase = T))
+
+  })
+}
+
+
+

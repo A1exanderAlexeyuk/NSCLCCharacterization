@@ -13,7 +13,7 @@ generateSurvival <- function(connection,
 
   sql <- readChar(pathToSql, file.info(pathToSql)$size)
 
-  surv_outputs <- purrr::map_dfr(targetIds, function(targetId){
+  survOutputs <- purrr::map_dfr(targetIds, function(targetId){
 
       sqlTmp <- SqlRender::render(sql,
                                    cohort_database_schema = cohortDatabaseSchema,
@@ -171,3 +171,32 @@ generateKaplanMeierDescriptionTFITTD <- function(connection,
 }
 
 
+#' @export
+generateTimeToTreatmenInitiationStatistics <- function(connection,
+                                                       cohortDatabaseSchema,
+                                                       cohortTable,
+                                                       targetIds,
+                                                       outcomeId, # treatment initiation
+                                                       databaseId){
+
+  sql <- SqlRender::readSql(file.path(getPathToTreatmentStats(),
+                                      "TimeToTreatmentInitiation.sql"))
+
+  survOutputs <- purrr::map_df(targetIds, function(targetId){
+
+    sqlTmp <- SqlRender::render(sql = sql,
+                                 cohortDatabaseSchema = cohortDatabaseSchema,
+                                 cohortTable = cohortTable,
+                                 outcomeId = outcomeId,
+                                 targetId = targetId,
+                                 databaseId = databaseId)
+
+    sqlTmp <- SqlRender::translate(sql = sqlTmp,
+                                    targetDialect = connection@dbms)
+
+    timeToTreatmentInitiation <- data.frame(DatabaseConnector::querySql(connection = connection,
+                                                                        sql = sqlTmp,
+                                                                        snakeCaseToCamelCase = T))
+
+  })
+}

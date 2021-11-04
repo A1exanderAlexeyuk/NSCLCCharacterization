@@ -60,10 +60,8 @@ runStudy <- function(connectionDetails = NULL,
   cohorts <- getCohortsToCreate()
   # Remove any cohorts that are to be excluded
   cohorts <- cohorts[!(cohorts$cohortId %in% cohortIdsToExcludeFromExecution), ]
-  targetCohortIds <- cohorts[cohorts$cohortType %in% cohortGroups, "cohortId"][[1]]
-  # strataCohortIds <- cohorts[cohorts$cohortType == "strata", "cohortId"][[1]]
-  # featureCohortIds <- cohorts[cohorts$cohortType == "feature", "cohortId"][[1]]
-  #featureCohortIds <- cohorts[cohorts$cohortType == "outcome", "cohortId"][[1]]
+  targetCohortIds <- cohorts[cohorts$cohortType %in% cohortGroups, "cohortId"][[1]]#! should use first 3!
+  outcomeCohortIds <- cohorts[cohorts$cohortType == "outcome", "cohortId"][[1]]
 
   # Start with the target cohorts
   ParallelLogger::logInfo("**********************************************************")
@@ -75,7 +73,7 @@ runStudy <- function(connectionDetails = NULL,
                        oracleTempSchema = oracleTempSchema,
                        cohortDatabaseSchema = cohortDatabaseSchema,
                        cohortTable = cohortStagingTable,
-                       cohortIds = targetCohortIds,
+                       cohortIds = outcomeCohortIds,
                        minCellCount = minCellCount,
                        createCohortTable = TRUE,
                        generateInclusionStats = FALSE,
@@ -95,26 +93,26 @@ runStudy <- function(connectionDetails = NULL,
                        targetIds = targetCohortIds,
                        oracleTempSchema = oracleTempSchema)
 
-  # Compute the features
-  ParallelLogger::logInfo("**********************************************************")
-  ParallelLogger::logInfo(" ---- Create feature proportions ---- ")
-  ParallelLogger::logInfo("**********************************************************")
-  createFeatureProportions(connection = connection,
-                           cohortDatabaseSchema = cohortDatabaseSchema,
-                           cohortStagingTable = cohortStagingTable,
-                           cohortTable = cohortTable,
-                           featureSummaryTable = featureSummaryTable,
-                           oracleTempSchema = oracleTempSchema)
-
-  ParallelLogger::logInfo("Saving database metadata")
-  database <- data.frame(databaseId = databaseId,
-                         databaseName = databaseName,
-                         description = databaseDescription,
-                         vocabularyVersion = getVocabularyInfo(connection = connection,
-                                                               cdmDatabaseSchema = cdmDatabaseSchema,
-                                                               oracleTempSchema = oracleTempSchema),
-                         isMetaAnalysis = 0)
-  writeToCsv(database, file.path(exportFolder, "database.csv"))
+  # # Compute the features
+  # ParallelLogger::logInfo("**********************************************************")
+  # ParallelLogger::logInfo(" ---- Create feature proportions ---- ")
+  # ParallelLogger::logInfo("**********************************************************")
+  # createFeatureProportions(connection = connection,
+  #                          cohortDatabaseSchema = cohortDatabaseSchema,
+  #                          cohortStagingTable = cohortStagingTable,
+  #                          cohortTable = cohortTable,
+  #                          featureSummaryTable = featureSummaryTable,
+  #                          oracleTempSchema = oracleTempSchema)
+  #
+  # ParallelLogger::logInfo("Saving database metadata")
+  # database <- data.frame(databaseId = databaseId,
+  #                        databaseName = databaseName,
+  #                        description = databaseDescription,
+  #                        vocabularyVersion = getVocabularyInfo(connection = connection,
+  #                                                              cdmDatabaseSchema = cdmDatabaseSchema,
+  #                                                              oracleTempSchema = oracleTempSchema),
+  #                        isMetaAnalysis = 0)
+  # writeToCsv(database, file.path(exportFolder, "database.csv"))
 
   # Counting staging cohorts ---------------------------------------------------------------
   ParallelLogger::logInfo("Counting staging cohorts")
@@ -131,6 +129,29 @@ runStudy <- function(connectionDetails = NULL,
   writeToCsv(counts, file.path(exportFolder, "cohort_staging_count.csv"),
              incremental = incremental, cohortId = counts$cohortId)
 
+
+
+
+  # Generate  regimen stats table -----------------------------------------------------------------
+  createRegimenStatsTable <- createcreateRegimenStats(connection = connection,
+                                                      cdmDatabaseSchema = cdmDatabaseSchema,
+                                                      cohortDatabaseSchema = cohortDatabaseSchema,
+                                                      cohortTable = cohortStagingTable,
+                                                      regimenStatsTable = regimenStatsTable,
+                                                      regimenIngredientsTable = regimenIngredientsTable,
+                                                      gapBetweenTreatment = 120)
+
+  # Generate categorized regimens  info -----------------------------------------------------------------
+
+  categorizedRegimens <- createCategorizedRegimensTable( connection = connection,
+                                                         cohortDatabaseSchema = cohortDatabaseSchema,
+                                                         cohortTable = cohortStagingTable,
+                                                         regimenStatsTable = regimenStatsTable,
+                                                         targetIds = targetIds)
+
+  writeToCsv(SurvivalInfo, file.path(exportFolder,
+                                     "categorizedRegimens_info.csv"))
+
   # Generate survival info -----------------------------------------------------------------
 
   ParallelLogger::logInfo("Generating time to event data")
@@ -138,22 +159,53 @@ runStudy <- function(connectionDetails = NULL,
 
   KMOutcomes <- getFeatures()
   KMOutcomesIds <- KMOutcomes$cohortId[1]
-  SurvivalInfo <- generateSurvival(connection,
-                                  cohortDatabaseSchema,
-                                  cohortTable = cohortStagingTable,
-                                  targetIds = targetIds,
-                                  outcomeIds = KMOutcomesIds,
-                                  databaseId = databaseId,
-                                  packageName = getThisPackageName())
+  SurvivalInfo <- generateSurvival(connection = connection,
+                                   cohortDatabaseSchema = cohortDatabaseSchema,
+                                   cohortTable = cohortStagingTable,
+                                   targetIds = targetIds,
+                                   outcomeIds = KMOutcomesIds,
+                                   databaseId = databaseId,
+                                   packageName = getThisPackageName())
 
 
   KMOutcomesIds <- KMOutcomes$cohortId[KMOutcomes$name %in% c('Death')]
 
   writeToCsv(SurvivalInfo, file.path(exportFolder,
                                      "Survuval_info.csv"),
-             incremental = incremental,
-             targetId = timeToEvent$targetId)
+             incremental = F,
+             targetId = SurvivalInfo$targetId)
 
+  # Generate treatment outcomes info -----------------------------------------------------
+  # time to treatment initiation
+  timeToTI <- generateTimeToTreatmenInitiationStatistics(connection = connection,
+                                                         cohortDatabaseSchema,
+                                                         cohortTable = cohortStagingTable,
+                                                         targetIds = targetIds,
+                                                         outcomeId = outcomeId,
+                                                         databaseId = databaseId)
+  writeToCsv(timeToTI, file.path(exportFolder,
+                                "timeToTI_info.csv"))
+
+  # time to next treatment
+  timeToNT <- generateKaplanMeierDescriptionTNT(connection = connection,
+                                                cohortDatabaseSchema = cohortDatabaseSchema,
+                                                regimenStatsTable = regimenStatsTable,
+                                                cohortTable = cohortStagingTable,
+                                                targetIds = targetIds,
+                                                databaseId = databaseId)
+
+  writeToCsv(timeToTI, file.path(exportFolder,
+                                 "timeToNT.csv"))
+
+  # treatment free interval and time to treatment discontinuation
+  TFI_TTD <- generateKaplanMeierDescriptionTFI_TTD(connection = connection,
+                                                   cohortDatabaseSchema = cohortDatabaseSchema,
+                                                   regimenStatsTable = regimenStatsTable,
+                                                   targetIds = targetIds,
+                                                   databaseId = databaseId)
+
+  writeToCsv(TFI_TTD, file.path(exportFolder,
+                                 "TFI_and_TTD.csv"))
 
    # Generate metricsDistribution info -----------------------------------------------------
   ParallelLogger::logInfo("Generating metrics distribution")
@@ -162,44 +214,45 @@ runStudy <- function(connectionDetails = NULL,
   # prepare necessary tables
   targetIdsFormatted <- paste(targetIds, collapse = ', ')
   pathToSql <- system.file("sql", "sql_server",
-                           "quartiles", "IQRComplementaryTables.sql",
+                           "distributions", "IQRComplementaryTables.sql",
                            package = getThisPackageName())
+
   sql <- readChar(pathToSql, file.info(pathToSql)$size)
   DatabaseConnector::renderTranslateExecuteSql(connection,
                                                sql = sql,
-                                               cdm_database_schema = cdmDatabaseSchema,
-                                               cohort_database_schema = cohortDatabaseSchema,
-                                               cohort_table = cohortStagingTable,
-                                               target_ids = targetIdsFormatted)
+                                               cdmDatabaseSchema = cdmDatabaseSchema,
+                                               cohortDatabaseSchema = cohortDatabaseSchema,
+                                               cohortTable = cohortStagingTable,
+                                               targetIds = targetIdsFormatted)
 
 
-  DistribAnalyses <- c('AgeAtDiagnosis',
-                       'YearOfDiagnosis',
-                       'CharlsonAtDiagnosis',
-                       'NeutrophilToLymphocyteRatio',
-                       'PDLAtDiagnosis',
-                       'PlateletToLymphocyteRatio')
+  DistribAnalyses <- c('AgeAtIndex',
+                       'CharlsonAtIndex',
+                       'NeutrophilToLymphocyteRatioAtIndex',
+                       'PDLAtIndex',
+                       'PlateletToLymphocyteRatioAtIndex')
 
   metricsDistribution <- data.frame()
 
-  result <- getAtEventDistribution(connection, cohortDatabaseSchema,
-                                  cdmDatabaseSchema,
-                                  cohortTable = cohortStagingTable,
-                                  targetIds = targetIds,
-                                  outcomeId = outcomeId,
-                                  databaseId = databaseId,
-                                  packageName = getThisPackageName(),
-                                  analysisName <- analysis)
+  result <- getAtEventDistribution(connection = connection,
+                                   cohortDatabaseSchema = cohortDatabaseSchema,
+                                   cdmDatabaseSchema = cdmDatabaseSchema,
+                                   cohortTable = cohortStagingTable,
+                                   targetIds = targetIds,
+                                   databaseId = databaseId,
+                                   packageName = getThisPackageName(),
+                                   analysisName <- analysis)
 
-    metricsDistribution<- rbind(metricsDistribution, result)
+    metricsDistribution <- rbind(metricsDistribution, result)
   }
 
   writeToCsv(metricsDistribution, file.path(exportFolder,
                                             "metrics_distribution.csv"),
-             incremental = incremental,
              cohortDefinitionId = metricsDistribution$cohortDefinitionId)
-
-  pathToSql <- system.file("sql", "sql_server","quartiles",
+ # drom temp tables
+  pathToSql <- system.file("sql",
+                           "sql_server",
+                           "distributions",
                            "RemoveComplementaryTables.sql",
                            package = getThisPackageName())
   sql <- readChar(pathToSql, file.info(pathToSql)$size)

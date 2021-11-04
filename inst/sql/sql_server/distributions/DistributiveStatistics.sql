@@ -36,18 +36,18 @@
 
                   FROM details
 
-                  where total > 1 --to prevent devision on 0
+                  where total > 1 -- to prevent devision on 0
 
                   )
-SELECT cohort_definition_id,
+SELECT  cohort_definition_id,
         ROUND (AVG(q3) - AVG(q1),1) AS IQR,
         ROUND (MIN(value),1) AS minimum,
         ROUND (AVG(q1),1) AS q1,
-       ROUND (AVG(median),1) AS median,
-       ROUND (AVG(q3),1) AS q3,
-       ROUND (MAX(value),1) AS maximum,
-       ROUND (AVG(mean) ,1) as Mean,
-       ROUND (sqrt(SUM(Variance)), 1) as StD,
+        ROUND (AVG(median),1) AS median,
+        ROUND (AVG(q3),1) AS q3,
+        ROUND (MAX(value),1) AS maximum,
+        ROUND (AVG(mean) ,1) as mean,
+        ROUND (sqrt(SUM(Variance)), 1) as std,
        '@analysis_name' AS analysis_name
 
 FROM quartiles
