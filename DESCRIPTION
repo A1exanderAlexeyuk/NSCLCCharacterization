@@ -40,8 +40,6 @@ Remotes:
   OHDSI/OhdsiSharing
 License: Apache License 2.0
 VignetteBuilder: knitr
-URL: https://github.com/ohdsi-studies/PioneerWatchfulWaiting
-BugReports: https://github.com/ohdsi-studies/PioneerWatchfulWaiting/issues
 Encoding: UTF-8
 LazyData: TRUE
 RoxygenNote: 7.1.1
