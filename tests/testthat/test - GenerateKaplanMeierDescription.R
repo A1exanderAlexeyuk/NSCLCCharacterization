@@ -8,6 +8,12 @@ cohortDatabaseSchema <- resultsDatabaseSchema
 cohortTable <- Sys.getenv("testcohortTable")
 databaseId <- "testDatabaseId"
 packageName = "NSCLCCharacterization"
+connectionDetails <- createConnectionDetails(dbms = "postgresql",
+                                             server = Sys.getenv("testserver"),
+                                             user = Sys.getenv("testuser"),
+                                             password = Sys.getenv("testuser"),
+                                             port = Sys.getenv("testport"))
+conn <- connect(connectionDetails=connectionDetails)
 test_that("Survival test", {
   connectionDetails <- createConnectionDetails(dbms = "postgresql",
                                                server = Sys.getenv("testserver"),
@@ -35,5 +41,21 @@ test_that("Survival test", {
                                 databaseId = databaseId))
 })
 
-
+test_that("generateKaplanMeierDescriptionTFITTD", {
+  connectionDetails <- createConnectionDetails(dbms = "postgresql",
+                                               server = Sys.getenv("testserver"),
+                                               user = Sys.getenv("testuser"),
+                                               password = Sys.getenv("testuser"),
+                                               port = Sys.getenv("testport"))
+  conn <- connect(connectionDetails=connectionDetails)
+  targetIds <- 1
+  regimenStatsTable = "stats_test_lines"
+  expect_s3_class(NSCLCCharacterization::generateKaplanMeierDescriptionTFITTD(connection = conn,
+                                                                              cohortDatabaseSchema = cohortDatabaseSchema,
+                                                                              regimenStatsTable,
+                                                                              targetIds = targetIds,
+                                                                              packageName = "NSCLCCharacterization",
+                                                                              databaseId = databaseId
+  ), "data.frame")
+})
 
