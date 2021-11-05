@@ -4,7 +4,7 @@ WITH init_data AS (
                   IS NOT NULL AS value then 1
                   else 0 end   as event,
                   Time_to_Treatment_Discontinuation as time_to_event
-                  FROM @cohort_database_schema.@regimenStatsTable
+                  FROM @cohortDatabaseSchema.@regimenStatsTable
                   where line_of_therapy < 3
                   AND cohort_definition_id IN (@targetId)
                   )

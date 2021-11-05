@@ -3,7 +3,7 @@ WITH init_data AS (
                   Time_to_Next_Treatment IS NOT NULL AS value then 1 else 0 end
                   as event,
                   Time_to_Next_Treatment as time_to_event
-                  FROM @cohort_database_schema.@regimenStatsTable
+                  FROM @cohortDatabaseSchema.@regimenStatsTable
                   WHERE cohort_definition_id IN (@targetId)
                   )
 

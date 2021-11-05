@@ -5,7 +5,7 @@ WITH init_data AS (
                   Treatment_free_Interval IS NOT NULL AS value then 1 else 0 end
                   as event,
                   Treatment_free_Interval as time_to_event
-                  FROM @cohort_database_schema.@regimenStatsTable
+                  FROM @cohortDatabaseSchema.@regimenStatsTable
                   AND cohort_definition_id IN (@targetId)
                   )
 
