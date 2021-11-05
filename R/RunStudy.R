@@ -15,9 +15,7 @@ runStudy <- function(connectionDetails = NULL,
                      databaseName = databaseId,
                      databaseDescription = "",
                      useBulkCharacterization = FALSE,
-                     minCellCount = 5,
-                     incremental = FALSE,
-                     incrementalFolder = file.path(exportFolder, "RecordKeeping")) {
+                     minCellCount = 5) {
   start <- Sys.time()
 
   if (!file.exists(exportFolder)) {
@@ -26,7 +24,7 @@ runStudy <- function(connectionDetails = NULL,
 
   ParallelLogger::addDefaultFileLogger(file.path(
     exportFolder,
-    "NonSmallCellularLungCancerCharacterization.txt"
+    "NSCLCCharacterization.txt"
   ))
   on.exit(ParallelLogger::unregisterLogger("DEFAULT"))
 
@@ -36,15 +34,6 @@ runStudy <- function(connectionDetails = NULL,
   useSubset <- Sys.getenv("USE_SUBSET")
   if (!is.na(as.logical(useSubset)) && as.logical(useSubset)) {
     ParallelLogger::logWarn("Running in subset mode for testing")
-  }
-
-  if (incremental) {
-    if (is.null(incrementalFolder)) {
-      stop("Must specify incrementalFolder when incremental = TRUE")
-    }
-    if (!file.exists(incrementalFolder)) {
-      dir.create(incrementalFolder, recursive = TRUE)
-    }
   }
 
   if (!is.null(getOption("fftempdir")) && !file.exists(getOption("fftempdir"))) {
@@ -79,8 +68,6 @@ runStudy <- function(connectionDetails = NULL,
     minCellCount = minCellCount,
     createCohortTable = TRUE,
     generateInclusionStats = FALSE,
-    incremental = incremental,
-    incrementalFolder = incrementalFolder,
     inclusionStatisticsFolder = exportFolder
   )
 
@@ -99,8 +86,6 @@ runStudy <- function(connectionDetails = NULL,
     minCellCount = minCellCount,
     createCohortTable = FALSE,
     generateInclusionStats = FALSE,
-    incremental = incremental,
-    incrementalFolder = incrementalFolder,
     inclusionStatisticsFolder = exportFolder
   )
 
@@ -136,7 +121,7 @@ runStudy <- function(connectionDetails = NULL,
   allStudyCohorts <- getAllStudyCohorts()
   counts <- dplyr::left_join(x = allStudyCohorts, y = counts, by = "cohortId")
   writeToCsv(counts, file.path(exportFolder, "cohort_staging_count.csv"),
-    incremental = incremental, cohortId = counts$cohortId
+             cohortId = counts$cohortId
   )
 
 
@@ -251,17 +236,17 @@ runStudy <- function(connectionDetails = NULL,
   # prepare necessary tables
   targetIdsFormatted <- paste(targetIds, collapse = ", ")
   pathToSql <- system.file("sql", "sql_server",
-    "distributions", "IQRComplementaryTables.sql",
-    package = getThisPackageName()
+                           "distributions", "IQRComplementaryTables.sql",
+                           package = getThisPackageName()
   )
 
   sql <- readChar(pathToSql, file.info(pathToSql)$size)
   DatabaseConnector::renderTranslateExecuteSql(connection,
-    sql = sql,
-    cdmDatabaseSchema = cdmDatabaseSchema,
-    cohortDatabaseSchema = cohortDatabaseSchema,
-    cohortTable = cohortStagingTable,
-    targetIds = targetIdsFormatted
+                                               sql = sql,
+                                               cdmDatabaseSchema = cdmDatabaseSchema,
+                                               cohortDatabaseSchema = cohortDatabaseSchema,
+                                               cohortTable = cohortStagingTable,
+                                               targetIds = targetIdsFormatted
   )
 
 
@@ -287,133 +272,141 @@ runStudy <- function(connectionDetails = NULL,
   )
 
   metricsDistribution <- rbind(metricsDistribution, result)
-}
-
-writeToCsv(metricsDistribution, file.path(
-  exportFolder,
-  "metrics_distribution.csv"
-),
-cohortDefinitionId = metricsDistribution$cohortDefinitionId
-)
-# drom temp tables
-pathToSql <- system.file("sql",
-  "sql_server",
-  "distributions",
-  "RemoveComplementaryTables.sql",
-  package = getThisPackageName()
-)
-sql <- readChar(pathToSql, file.info(pathToSql)$size)
-DatabaseConnector::renderTranslateExecuteSql(connection,
-  sql = sql,
-  cohort_database_schema = cohortDatabaseSchema
-)
 
 
-# Counting cohorts -----------------------------------------------------------------------
-ParallelLogger::logInfo("Counting cohorts")
-counts <- getCohortCounts(
-  connection = connection,
-  cohortDatabaseSchema = cohortDatabaseSchema,
-  cohortTable = cohortTable
-)
-if (nrow(counts) > 0) {
-  counts$databaseId <- databaseId
-  counts <- enforceMinCellValue(counts, "cohortEntries", minCellCount)
-  counts <- enforceMinCellValue(counts, "cohortSubjects", minCellCount)
-}
-writeToCsv(counts, file.path(exportFolder, "cohort_count.csv"), incremental = incremental, cohortId = counts$cohortId)
 
-# Read in the cohort counts
-counts <- readr::read_csv(file.path(exportFolder, "cohort_count.csv"), col_types = readr::cols())
-colnames(counts) <- SqlRender::snakeCaseToCamelCase(colnames(counts))
 
-# Export the cohorts from the study
-cohortsForExport <- loadCohortsForExportFromPackage(cohortIds = counts$cohortId)
-writeToCsv(cohortsForExport, file.path(exportFolder, "cohort.csv"))
-
-# Extract feature counts -----------------------------------------------------------------------
-ParallelLogger::logInfo("Extract feature counts")
-featureProportions <- exportFeatureProportions(
-  connection = connection,
-  cohortDatabaseSchema = cohortDatabaseSchema,
-  cohortTable = cohortTable,
-  featureSummaryTable = featureSummaryTable
-)
-if (nrow(featureProportions) > 0) {
-  featureProportions$databaseId <- databaseId
-  featureProportions <- enforceMinCellValue(featureProportions, "featureCount", minCellCount)
-  featureProportions <- featureProportions[featureProportions$totalCount >= getMinimumSubjectCountForCharacterization(), ]
-}
-features <- formatCovariates(featureProportions)
-writeToCsv(features, file.path(exportFolder, "covariate.csv"), incremental = incremental, covariateId = features$covariateId)
-featureValues <- formatCovariateValues(featureProportions, counts, minCellCount, databaseId)
-featureValues <- featureValues[, c("cohortId", "covariateId", "mean", "sd", "databaseId")]
-writeToCsv(featureValues, file.path(exportFolder, "covariate_value.csv"), incremental = incremental, cohortId = featureValues$cohortId, covariateId = featureValues$covariateId)
-# Also keeping a raw output for debugging
-writeToCsv(featureProportions, file.path(exportFolder, "feature_proportions.csv"))
-
-# Cohort characterization ---------------------------------------------------------------
-# Note to package maintainer: If any of the logic to this changes, you'll need to revist
-# the function createBulkCharacteristics
-runCohortCharacterization <- function(cohortId,
-                                      cohortName,
-                                      covariateSettings,
-                                      windowId,
-                                      curIndex,
-                                      totalCount) {
-  ParallelLogger::logInfo(
-    "- (windowId=", windowId, ", ", curIndex, " of ", totalCount,
-    ") Creating characterization for cohort: ", cohortName
+  writeToCsv(metricsDistribution, file.path(
+    exportFolder,
+    "metrics_distribution.csv"
+  ),
+  cohortDefinitionId = metricsDistribution$cohortDefinitionId
   )
-  data <- getCohortCharacteristics(
+  # drom temp tables
+  pathToSql <- system.file("sql",
+                           "sql_server",
+                           "distributions",
+                           "RemoveComplementaryTables.sql",
+                           package = getThisPackageName()
+  )
+  sql <- readChar(pathToSql, file.info(pathToSql)$size)
+  DatabaseConnector::renderTranslateExecuteSql(connection,
+                                               sql = sql,
+                                               cohort_database_schema = cohortDatabaseSchema
+  )
+
+
+  # Counting cohorts -----------------------------------------------------------------------
+  ParallelLogger::logInfo("Counting cohorts")
+  counts <- getCohortCounts(
     connection = connection,
-    cdmDatabaseSchema = cdmDatabaseSchema,
-    oracleTempSchema = oracleTempSchema,
+    cohortDatabaseSchema = cohortDatabaseSchema,
+    cohortTable = cohortTable
+  )
+  if (nrow(counts) > 0) {
+    counts$databaseId <- databaseId
+    counts <- enforceMinCellValue(counts, "cohortEntries", minCellCount)
+    counts <- enforceMinCellValue(counts, "cohortSubjects", minCellCount)
+  }
+  writeToCsv(counts, file.path(exportFolder, "cohort_count.csv"), cohortId = counts$cohortId)
+
+  # Read in the cohort counts
+  counts <- readr::read_csv(file.path(exportFolder, "cohort_count.csv"), col_types = readr::cols())
+  colnames(counts) <- SqlRender::snakeCaseToCamelCase(colnames(counts))
+
+  # Export the cohorts from the study
+  cohortsForExport <- loadCohortsForExportFromPackage(cohortIds = counts$cohortId)
+  writeToCsv(cohortsForExport, file.path(exportFolder, "cohort.csv"))
+
+  # Extract feature counts -----------------------------------------------------------------------
+  ParallelLogger::logInfo("Extract feature counts")
+  featureProportions <- exportFeatureProportions(
+    connection = connection,
     cohortDatabaseSchema = cohortDatabaseSchema,
     cohortTable = cohortTable,
-    cohortId = cohortId,
-    covariateSettings = covariateSettings
+    featureSummaryTable = featureSummaryTable
   )
-  if (nrow(data) > 0) {
-    data$cohortId <- cohortId
+  if (nrow(featureProportions) > 0) {
+    featureProportions$databaseId <- databaseId
+    featureProportions <- enforceMinCellValue(
+      featureProportions, "featureCount",
+      minCellCount
+    )
+    featureProportions <- featureProportions[featureProportions$totalCount >=
+                                               getMinimumSubjectCountForCharacterization(), ]
+  }
+  features <- formatCovariates(featureProportions)
+  writeToCsv(features, file.path(exportFolder, "covariate.csv"),
+             covariateId = features$covariateId
+  )
+  featureValues <- formatCovariateValues(featureProportions, counts, minCellCount, databaseId)
+  featureValues <- featureValues[, c("cohortId", "covariateId", "mean", "sd", "databaseId")]
+  writeToCsv(featureValues, file.path(exportFolder, "covariate_value.csv"),
+             cohortId = featureValues$cohortId, covariateId = featureValues$covariateId
+  )
+  # Also keeping a raw output for debugging
+  writeToCsv(featureProportions, file.path(exportFolder, "feature_proportions.csv"))
+
+  # Cohort characterization ---------------------------------------------------------------
+  # Note to package maintainer: If any of the logic to this changes, you'll need to revist
+  # the function createBulkCharacteristics
+  runCohortCharacterization <- function(cohortId,
+                                        cohortName,
+                                        covariateSettings,
+                                        curIndex,
+                                        totalCount) {
+    data <- getCohortCharacteristics(
+      connection = connection,
+      cdmDatabaseSchema = cdmDatabaseSchema,
+      oracleTempSchema = oracleTempSchema,
+      cohortDatabaseSchema = cohortDatabaseSchema,
+      cohortTable = cohortTable,
+      cohortId = cohortId,
+      covariateSettings = covariateSettings
+    )
+    if (nrow(data) > 0) {
+      data$cohortId <- cohortId
+    }
+
+    return(data)
   }
 
-  data$covariateId <- data$covariateId * 10 + windowId
-  return(data)
+  # Subset the cohorts to the target/strata for running feature extraction
+  # that are >= 140 per protocol to improve efficency
+  featureExtractionCohorts <-
+    loadCohortsForExportWithChecksumFromPackage(counts[
+      counts$cohortSubjects
+      >= getMinimumSubjectCountForCharacterization(),
+      c("cohortId")
+    ]$cohortId)
+
+
+  # Format results -----------------------------------------------------------------------------------
+  ParallelLogger::logInfo("********************************************************************************************")
+  ParallelLogger::logInfo("Formatting Results")
+  ParallelLogger::logInfo("********************************************************************************************")
+  # Ensure that the covariate_value.csv is free of any duplicative values. This can happen after more than
+  # one run of the package.
+  cv <- data.table::fread_csv(file.path(exportFolder, "covariate_value.csv"),
+                              col_types = readr::cols()
+  )
+  cv <- unique(cv)
+  writeToCsv(cv, file.path(exportFolder, "covariate_value.csv"))
+
+  # Export to zip file -------------------------------------------------------------------------------
+  exportResults(exportFolder, databaseId, cohortIdsToExcludeFromResultsExport)
+  delta <- Sys.time() - start
+  ParallelLogger::logInfo(paste(
+    "Running study took",
+    signif(delta, 3),
+    attr(delta, "units")
+  ))
 }
 
-# Subset the cohorts to the target/strata for running feature extraction
-# that are >= 140 per protocol to improve efficency
-featureExtractionCohorts <-
-  loadCohortsForExportWithChecksumFromPackage(counts[
-    counts$cohortSubjects
-    >= getMinimumSubjectCountForCharacterization(),
-    c("cohortId")
-  ]$cohortId)
-
-
-# Format results -----------------------------------------------------------------------------------
-ParallelLogger::logInfo("********************************************************************************************")
-ParallelLogger::logInfo("Formatting Results")
-ParallelLogger::logInfo("********************************************************************************************")
-# Ensure that the covariate_value.csv is free of any duplicative values. This can happen after more than
-# one run of the package.
-cv <- data.table::fread_csv(file.path(exportFolder, "covariate_value.csv"), col_types = readr::cols())
-cv <- unique(cv)
-writeToCsv(cv, file.path(exportFolder, "covariate_value.csv"), incremental = FALSE)
-
-# Export to zip file -------------------------------------------------------------------------------
-exportResults(exportFolder, databaseId, cohortIdsToExcludeFromResultsExport)
-delta <- Sys.time() - start
-ParallelLogger::logInfo(paste(
-  "Running study took",
-  signif(delta, 3),
-  attr(delta, "units")
-))
-
-
 #' @export
-exportResults <- function(exportFolder, databaseId, cohortIdsToExcludeFromResultsExport = NULL) {
+exportResults <- function(exportFolder,
+                          databaseId,
+                          cohortIdsToExcludeFromResultsExport = NULL) {
   filesWithCohortIds <- c("covariate_value.csv", "cohort_count.csv")
   tempFolder <- NULL
   ParallelLogger::logInfo("Adding results to zip file")
@@ -473,7 +466,10 @@ getVocabularyInfo <- function(connection, cdmDatabaseSchema, oracleTempSchema) {
 #' @export
 getUserSelectableCohortGroups <- function() {
   cohortGroups <- getCohortGroups()
-  return(unlist(cohortGroups[cohortGroups$userCanSelect == TRUE, c("cohortGroup")], use.names = FALSE))
+  return(unlist(cohortGroups[
+    cohortGroups$userCanSelect == TRUE,
+    c("cohortGroup")
+  ], use.names = FALSE))
 }
 
 formatCovariates <- function(data) {
@@ -524,7 +520,7 @@ loadCohortsFromPackage <- function(cohortIds) {
 
   getSql <- function(name) {
     pathToSql <- system.file("sql", "sql_server", paste0(name, ".sql"),
-      package = packageName, mustWork = TRUE
+                             package = packageName, mustWork = TRUE
     )
     sql <- readChar(pathToSql, file.info(pathToSql)$size)
     return(sql)
@@ -532,8 +528,8 @@ loadCohortsFromPackage <- function(cohortIds) {
   cohorts$sql <- sapply(cohorts$cohortId, getSql)
   getJson <- function(name) {
     pathToJson <- system.file("cohorts", paste0(name, ".json"),
-      package = packageName,
-      mustWork = TRUE
+                              package = packageName,
+                              mustWork = TRUE
     )
     json <- readChar(pathToJson, file.info(pathToJson)$size)
     return(json)
@@ -569,18 +565,11 @@ loadCohortsForExportWithChecksumFromPackage <- function(cohortIds) {
 }
 
 
-
-writeToCsv <- function(data, fileName, incremental = FALSE, ...) {
+writeToCsv <- function(data,
+                       fileName,
+                       ...) {
   colnames(data) <- SqlRender::camelCaseToSnakeCase(colnames(data))
-  if (incremental) {
-    params <- list(...)
-    names(params) <- SqlRender::camelCaseToSnakeCase(names(params))
-    params$data <- data
-    params$fileName <- fileName
-    do.call(saveIncremental, params)
-  } else {
-    readr::write_csv(data, fileName)
-  }
+  readr::write_csv(data, fileName)
 }
 
 enforceMinCellValue <- function(data, fieldName, minValues, silent = FALSE) {
@@ -632,71 +621,4 @@ getCohortCounts <- function(connectionDetails = NULL,
     attr(delta, "units")
   ))
   return(counts)
-}
-
-subsetToRequiredCohorts <- function(cohorts,
-                                    task,
-                                    incremental,
-                                    recordKeepingFile) {
-  if (incremental) {
-    tasks <- getRequiredTasks(
-      cohortId = cohorts$cohortId,
-      task = task,
-      checksum = cohorts$checksum,
-      recordKeepingFile = recordKeepingFile
-    )
-    return(cohorts[cohorts$cohortId %in% tasks$cohortId, ])
-  } else {
-    return(cohorts)
-  }
-}
-
-getKeyIndex <- function(key, recordKeeping) {
-  if (nrow(recordKeeping) == 0 || length(key[[1]]) == 0 ||
-    !all(names(key) %in% names(recordKeeping))) {
-    return(c())
-  } else {
-    key <- unique(tibble::as_tibble(key))
-    recordKeeping$idxCol <- 1:nrow(recordKeeping)
-    idx <- merge(recordKeeping, key)$idx
-    return(idx)
-  }
-}
-
-recordTasksDone <- function(..., checksum, recordKeepingFile, incremental = TRUE) {
-  if (!incremental) {
-    return()
-  }
-  if (length(list(...)[[1]]) == 0) {
-    return()
-  }
-  if (file.exists(recordKeepingFile)) {
-    recordKeeping <- readr::read_csv(recordKeepingFile, col_types = readr::cols())
-    idx <- getKeyIndex(list(...), recordKeeping)
-    if (length(idx) > 0) {
-      recordKeeping <- recordKeeping[-idx, ]
-    }
-  } else {
-    recordKeeping <- tibble::tibble()
-  }
-  newRow <- tibble::as_tibble(list(...))
-  newRow$checksum <- checksum
-  newRow$timeStamp <- Sys.time()
-  recordKeeping <- dplyr::bind_rows(recordKeeping, newRow)
-  readr::write_csv(recordKeeping, recordKeepingFile)
-}
-
-saveIncremental <- function(data, fileName, ...) {
-  if (length(list(...)[[1]]) == 0) {
-    return()
-  }
-  if (file.exists(fileName)) {
-    previousData <- readr::read_csv(fileName, col_types = readr::cols())
-    idx <- getKeyIndex(list(...), previousData)
-    if (length(idx) > 0) {
-      previousData <- previousData[-idx, ]
-    }
-    data <- dplyr::bind_rows(previousData, data)
-  }
-  readr::write_csv(data, fileName)
 }

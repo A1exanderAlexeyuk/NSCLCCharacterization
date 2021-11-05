@@ -1,13 +1,13 @@
 getThisPackageName <- function() {
-  return("LungCancerCharacterization")
+  return("NSCLCCharacterization")
 }
 
 getPathToTreatmentStats <- function() {
-     return("inst/sql/sql_server/TreatmentAnalysis")
+  return("inst/sql/sql_server/TreatmentAnalysis")
 }
 
 getPathToQuantiles <- function() {
-  return("inst/sql/sql_server/quantiles")
+  return("inst/sql/sql_server/distributions")
 }
 
 
@@ -16,7 +16,7 @@ getPathToResource <- function(useSubset = Sys.getenv("USE_SUBSET")) {
   path <- "settings"
   useSubset <- as.logical(useSubset)
   if (is.na(useSubset)) {
-    useSubset = FALSE
+    useSubset <- FALSE
   }
   if (useSubset) {
     path <- file.path(path, "subset/")
@@ -24,7 +24,7 @@ getPathToResource <- function(useSubset = Sys.getenv("USE_SUBSET")) {
   return(path)
 }
 
-getCohortGroupsForDiagnostics <- function () {
+getCohortGroupsForDiagnostics <- function() {
   resourceFile <- file.path(getPathToResource(), "CohortGroupsDiagnostics.csv")
   return(readCsv(resourceFile))
 }
@@ -32,19 +32,21 @@ getCohortGroupsForDiagnostics <- function () {
 getCohortsToCreate <- function(cohortGroups = getCohortGroups()) {
   packageName <- getThisPackageName()
   cohorts <- data.frame()
-  for(i in 1:nrow(cohortGroups)) {
+  for (i in 1:nrow(cohortGroups)) {
     c <- readr::read_csv(system.file(cohortGroups$fileName[i],
                                      package = packageName,
-                                     mustWork = TRUE),
-                         col_types = readr::cols())
-    c <- c[c('name', 'atlasName', 'atlasId', 'cohortId')]
+                                     mustWork = TRUE
+    ),
+    col_types = readr::cols()
+    )
+    c <- c[c("name", "atlasName", "atlasId", "cohortId")]
     c$cohortType <- cohortGroups$cohortGroup[i]
     cohorts <- rbind(cohorts, c)
   }
   return(cohorts)
 }
 
-getCohortGroups <- function () {
+getCohortGroups <- function() {
   resourceFile <- file.path(getPathToResource(), "CohortGroups.csv")
   return(readCsv(resourceFile))
 }
@@ -61,79 +63,38 @@ getFeatures <- function() {
   return(readCsv(resourceFile))
 }
 
-getUserCovariateSettings <- function(){
-  FeatureExtraction::createCovariateSettings(useDemographicsGender = TRUE,
-                                             useDemographicsAge = TRUE,
-                                             useDemographicsAgeGroup = TRUE,
-                                             useDemographicsRace = TRUE,
-                                             useDemographicsEthnicity = TRUE,
-                                             useDemographicsIndexYear = TRUE,
-                                             useDemographicsIndexMonth = TRUE,
-                                             useConditionGroupEraShortTerm = TRUE,
-                                             useDrugGroupEraStartShortTerm = TRUE,
-                                             useProcedureOccurrenceLongTerm = TRUE,
-                                             useProcedureOccurrenceShortTerm = TRUE,
-                                             useConditionGroupEraLongTerm = TRUE,
-                                             useDeviceExposureLongTerm = TRUE,
-                                             useDeviceExposureMediumTerm = TRUE,
-                                             useDeviceExposureShortTerm = TRUE,
-                                             useMeasurementValueShortTerm = TRUE,
-                                             MeasurementLongTerm= TRUE,
-                                             MeasurementShortTerm = TRUE,
-                                             useObservationLongTerm = TRUE,
-                                             useObservationShortTerm = TRUE,
-                                             useCharlsonIndex = TRUE,
-                                             useDcsi = FALSE,
-                                             useChads2 = FALSE,
-                                             useChads2Vasc = FALSE,
-                                             useHfrs = FALSE,
-                                             useDrugGroupEraStartShortTerm = TRUE,
-                                             useProcedureOccurrenceLongTerm = TRUE,
-                                             useProcedureOccurrenceShortTerm = TRUE,
-                                             useDeviceExposureLongTerm = TRUE,
-                                             useDeviceExposureMediumTerm = TRUE,
-                                             useDeviceExposureShortTerm = TRUE,
-                                             useMeasurementValueShortTerm = TRUE,
-                                             MeasurementLongTerm= TRUE,
-                                             MeasurementShortTerm = TRUE,
-                                             useObservationLongTerm = TRUE,
-                                             useObservationShortTerm = TRUE,
-                                             useCharlsonIndex = TRUE,
-                                             useDcsi = FALSE,
-                                             useChads2 = FALSE,
-                                             useChads2Vasc = FALSE,
-                                             useHfrs = FALSE,
-                                             longTermStartDays = -365,
-                                             mediumTermStartDays = -180,
-                                             shortTermStartDays = -30,
-                                             endDays = 0,
-                                             includedCovariateConceptIds = c(4182210,
-                                                                             4063381,
-                                                                             4064161,
-                                                                             4212540,
-                                                                             201820,
-                                                                             443767,
-                                                                             442793,
-                                                                             4030518,
-                                                                             4245975,
-                                                                             4029488,
-                                                                             192680,
-                                                                             24966,
-                                                                             257628,
-                                                                             134442,
-                                                                             80800,
-                                                                             80809,
-                                                                             256197,
-                                                                             255348,
-                                                                             381591,
-                                                                             434056,
-                                                                             40568109,
-                                                                             4028741,
-                                                                             4289933,
-                                                                             438112),
-                                             addDescendantsToInclude = TRUE,
-                                             excludedCovariateConceptIds = c(4162276),
-                                             addDescendantsToExclude = TRUE,
-                                             includedCovariateIds = c()
+getCovariatesToInclude <- function() {
+  c(
+    4182210,
+    4063381,
+    4064161,
+    4212540,
+    201820,
+    443767,
+    442793,
+    4030518,
+    4245975,
+    4029488,
+    192680,
+    24966,
+    257628,
+    134442,
+    80800,
+    80809,
+    256197,
+    255348,
+    381591,
+    434056,
+    40568109,
+    4028741,
+    4289933,
+    438112
   )
+}
+
+readCsv <- function(resourceFile) {
+  packageName <- getThisPackageName()
+  pathToCsv <- system.file(resourceFile, package = packageName, mustWork = TRUE)
+  fileContents <- readr::read_csv(pathToCsv, col_types = readr::cols())
+  return(fileContents)
 }
