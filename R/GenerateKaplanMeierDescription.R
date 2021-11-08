@@ -67,10 +67,9 @@ generateSurvival <- function(connection,
 generateKaplanMeierDescriptionTNT <- function(connection,
                                               cohortDatabaseSchema,
                                               regimenStatsTable,
-                                              cohortTable,
                                               targetIds,
                                               databaseId) {
-  sqlFilesName <- c("TimeToNextTreatment.sql")
+  sqlFilesName <- "TimeToNextTreatment.sql"
 
   sql <- SqlRender::readSql(file.path(
     getPathToTreatmentStats(),
@@ -78,17 +77,20 @@ generateKaplanMeierDescriptionTNT <- function(connection,
   ))
 
   linesTreatmentOutput <- purrr::map_dfr(targetIds, function(targetId) {
-    sqlTmp <- render(
+    sqlRendered <- SqlRender::render(
       sql = sql,
-      cohort_database_schema = cohortDatabaseSchema,
+      cohortDatabaseSchema = cohortDatabaseSchema,
       targetId = targetId,
       regimenStatsTable = regimenStatsTable
     )
 
-    sqlTmp <- SqlRender::translate(sql, targetDialect = conn@dbms)
+    sqlTmp <- SqlRender::translate(
+      sql = sqlRendered,
+      targetDialect = connection@dbms
+                                   )
 
     km_proc <- as.data.frame(DatabaseConnector::querySql(
-      connection = conn,
+      connection = connection,
       sql = sqlTmp,
       snakeCaseToCamelCase = T
     ))
@@ -129,9 +131,7 @@ generateKaplanMeierDescriptionTFITTD <- function(connection,
 
   outcome <- "Time_to_Treatment_Discontinuation"
 
-  getPathToTreatmentStats <- function() {
-    return("inst/sql/sql_server/TreatmentAnalysis")
-  }
+
 
   sql_s <- lapply(
     file.path(getPathToTreatmentStats(), sqlFilesName),
@@ -139,64 +139,66 @@ generateKaplanMeierDescriptionTFITTD <- function(connection,
   )
 
   linesTreatmentOutput <- purrr::map_dfr(sql_s, function(sql) {
-    if (is.na(stringr::str_locate(
-      sql,
-      outcome
-    )[1])) {
-      outcomeId <- "TreatmentFreeInterval"
-    } else {
-      outcomeId <- "TimeToTreatmenDiscontinuation"
-    }
+    purrr::map_df(targetIds, function(targetId){
+      if (is.na(stringr::str_locate(
+        sql,
+        outcome
+      )[1])) {
+        outcomeId <- "TreatmentFreeInterval"
+      } else {
+        outcomeId <- "TimeToTreatmenDiscontinuation"
+      }
 
-    sqlTmp <- render(
-      sql = sql,
-      cohort_database_schema = cohortDatabaseSchema,
-      targetId = targetId,
-      regimenStatsTable = regimenStatsTable
-    )
+      sqlRendered <- SqlRender::render(
+        sql = sql,
+        cohortDatabaseSchema = cohortDatabaseSchema,
+        targetId = targetId,
+        regimenStatsTable = regimenStatsTable
+      )
 
-    sqlTmp <- SqlRender::translate(sql,
-                                   targetDialect = conn@dbms
-    )
+      sqlTmp <- SqlRender::translate(sql = sqlRendered,
+                                     targetDialect = connection@dbms
+      )
 
-    km_proc <- as.data.frame(DatabaseConnector::querySql(
-      connection = conn,
-      sql = sqlTmp,
-      snakeCaseToCamelCase = T
-    ))
-
-    nest_km <- km_proc %>%
-      tidyr::nest(data = !lineOfTherapy) %>%
-      dplyr::mutate(survInfo = purrr::map(
-        data,
-        ~ survival::survfit(survival::Surv(
-          timeToEvent,
-          event
-        )
-        ~ 1, data = .)
+      km_proc <- as.data.frame(DatabaseConnector::querySql(
+        connection = connection,
+        sql = sqlTmp,
+        snakeCaseToCamelCase = T
       ))
 
-    survivalSummary <- survInfo %>%
-      dplyr::mutate(result = purrr::map(nest_km, broom::tidy)) %>%
-      dplyr::select(
-        targetId = targetId, outcomeId = outcomeId,
-        lineOfTherapy, result, databaseId = databaseId
-      ) %>%
-      tidyr::unnest(cols = c(result))
+      nest_km <- km_proc %>%
+        tidyr::nest(data = !lineOfTherapy) %>%
+        dplyr::mutate(survInfo = purrr::map(
+          data,
+          ~ survival::survfit(survival::Surv(
+            timeToEvent,
+            event
+          )
+          ~ 1, data = .)
+        ))
 
-    data.frame(
-      targetId = targetId,
-      outcomeId = outcomeId,
-      lineOfTherapy = lineOfTherapy,
-      time = survivalSummary$time,
-      surv = survivalSummary$estimate,
-      n.censor = survivalSummary$n.censor,
-      n.event = survivalSummary$n.event,
-      n.risk = survivalSummary$n.risk,
-      lower = survivalSummary$conf.low,
-      upper = survivalSummary$conf.high,
-      databaseId = databaseId
-    )
+      survivalSummary <- survInfo %>%
+        dplyr::mutate(result = purrr::map(nest_km, broom::tidy)) %>%
+        dplyr::select(
+          targetId = targetId, outcomeId = outcomeId,
+          lineOfTherapy, result, databaseId = databaseId
+        ) %>%
+        tidyr::unnest(cols = c(result))
+
+      data.frame(
+        targetId = targetId,
+        outcomeId = outcomeId,
+        lineOfTherapy = lineOfTherapy,
+        time = survivalSummary$time,
+        surv = survivalSummary$estimate,
+        n.censor = survivalSummary$n.censor,
+        n.event = survivalSummary$n.event,
+        n.risk = survivalSummary$n.risk,
+        lower = survivalSummary$conf.low,
+        upper = survivalSummary$conf.high,
+        databaseId = databaseId
+      )
+    })
   })
 }
 
@@ -214,7 +216,7 @@ generateTimeToTreatmenInitiationStatistics <- function(connection,
   ))
 
   survOutputs <- purrr::map_df(targetIds, function(targetId) {
-    sqlTmp <- SqlRender::render(
+    sqlRendered <- SqlRender::render(
       sql = sql,
       cohortDatabaseSchema = cohortDatabaseSchema,
       cohortTable = cohortTable,
@@ -224,7 +226,7 @@ generateTimeToTreatmenInitiationStatistics <- function(connection,
     )
 
     sqlTmp <- SqlRender::translate(
-      sql = sqlTmp,
+      sql = sqlRendered,
       targetDialect = connection@dbms
     )
 
