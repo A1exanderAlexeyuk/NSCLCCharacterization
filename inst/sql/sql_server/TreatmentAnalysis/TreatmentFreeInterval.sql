@@ -1,12 +1,12 @@
 WITH init_data AS (
                   SELECT cohort_definition_id,
                   line_of_therapy,
-                  case when
-                  Treatment_free_Interval IS NOT NULL AS value then 1 else 0 end
+                  1
                   as event,
                   Treatment_free_Interval as time_to_event
                   FROM @cohortDatabaseSchema.@regimenStatsTable
-                  AND cohort_definition_id IN (@targetId)
+                  WHERE cohort_definition_id IN (@targetId)
+                  AND Treatment_free_Interval IS NOT null
                   )
 
 
@@ -16,8 +16,7 @@ WITH init_data AS (
                          cohort_definition_id,
                          line_of_therapy,
                          event,
-                         time_to_event,
-                         SUM(1) OVER (PARTITION BY cohort_definition_id,
-                         line_of_therapy) AS total
-                  FROM init_data
-                  WHERE total > 100; -- to make sure that analysis will be valid
+                         time_to_event
+
+                  FROM init_data;
+
