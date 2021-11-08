@@ -121,7 +121,7 @@ runStudy <- function(connectionDetails = NULL,
   allStudyCohorts <- getAllStudyCohorts()
   counts <- dplyr::left_join(x = allStudyCohorts, y = counts, by = "cohortId")
   writeToCsv(counts, file.path(exportFolder, "cohort_staging_count.csv"),
-             cohortId = counts$cohortId
+    cohortId = counts$cohortId
   )
 
 
@@ -236,17 +236,17 @@ runStudy <- function(connectionDetails = NULL,
   # prepare necessary tables
   targetIdsFormatted <- paste(targetIds, collapse = ", ")
   pathToSql <- system.file("sql", "sql_server",
-                           "distributions", "IQRComplementaryTables.sql",
-                           package = getThisPackageName()
+    "distributions", "IQRComplementaryTables.sql",
+    package = getThisPackageName()
   )
 
   sql <- readChar(pathToSql, file.info(pathToSql)$size)
   DatabaseConnector::renderTranslateExecuteSql(connection,
-                                               sql = sql,
-                                               cdmDatabaseSchema = cdmDatabaseSchema,
-                                               cohortDatabaseSchema = cohortDatabaseSchema,
-                                               cohortTable = cohortStagingTable,
-                                               targetIds = targetIdsFormatted
+    sql = sql,
+    cdmDatabaseSchema = cdmDatabaseSchema,
+    cohortDatabaseSchema = cohortDatabaseSchema,
+    cohortTable = cohortStagingTable,
+    targetIds = targetIdsFormatted
   )
 
 
@@ -284,15 +284,15 @@ runStudy <- function(connectionDetails = NULL,
   )
   # drom temp tables
   pathToSql <- system.file("sql",
-                           "sql_server",
-                           "distributions",
-                           "RemoveComplementaryTables.sql",
-                           package = getThisPackageName()
+    "sql_server",
+    "distributions",
+    "RemoveComplementaryTables.sql",
+    package = getThisPackageName()
   )
   sql <- readChar(pathToSql, file.info(pathToSql)$size)
   DatabaseConnector::renderTranslateExecuteSql(connection,
-                                               sql = sql,
-                                               cohort_database_schema = cohortDatabaseSchema
+    sql = sql,
+    cohort_database_schema = cohortDatabaseSchema
   )
 
 
@@ -333,16 +333,16 @@ runStudy <- function(connectionDetails = NULL,
       minCellCount
     )
     featureProportions <- featureProportions[featureProportions$totalCount >=
-                                               getMinimumSubjectCountForCharacterization(), ]
+      getMinimumSubjectCountForCharacterization(), ]
   }
   features <- formatCovariates(featureProportions)
   writeToCsv(features, file.path(exportFolder, "covariate.csv"),
-             covariateId = features$covariateId
+    covariateId = features$covariateId
   )
   featureValues <- formatCovariateValues(featureProportions, counts, minCellCount, databaseId)
   featureValues <- featureValues[, c("cohortId", "covariateId", "mean", "sd", "databaseId")]
   writeToCsv(featureValues, file.path(exportFolder, "covariate_value.csv"),
-             cohortId = featureValues$cohortId, covariateId = featureValues$covariateId
+    cohortId = featureValues$cohortId, covariateId = featureValues$covariateId
   )
   # Also keeping a raw output for debugging
   writeToCsv(featureProportions, file.path(exportFolder, "feature_proportions.csv"))
@@ -388,7 +388,7 @@ runStudy <- function(connectionDetails = NULL,
   # Ensure that the covariate_value.csv is free of any duplicative values. This can happen after more than
   # one run of the package.
   cv <- data.table::fread_csv(file.path(exportFolder, "covariate_value.csv"),
-                              col_types = readr::cols()
+    col_types = readr::cols()
   )
   cv <- unique(cv)
   writeToCsv(cv, file.path(exportFolder, "covariate_value.csv"))
@@ -520,7 +520,7 @@ loadCohortsFromPackage <- function(cohortIds) {
 
   getSql <- function(name) {
     pathToSql <- system.file("sql", "sql_server", paste0(name, ".sql"),
-                             package = packageName, mustWork = TRUE
+      package = packageName, mustWork = TRUE
     )
     sql <- readChar(pathToSql, file.info(pathToSql)$size)
     return(sql)
@@ -528,8 +528,8 @@ loadCohortsFromPackage <- function(cohortIds) {
   cohorts$sql <- sapply(cohorts$cohortId, getSql)
   getJson <- function(name) {
     pathToJson <- system.file("cohorts", paste0(name, ".json"),
-                              package = packageName,
-                              mustWork = TRUE
+      package = packageName,
+      mustWork = TRUE
     )
     json <- readChar(pathToJson, file.info(pathToJson)$size)
     return(json)

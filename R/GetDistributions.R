@@ -15,29 +15,29 @@ getAtEventDistribution <- function(connection,
   analysisName <- substring(SqlRender::camelCaseToTitleCase(analysisName), 2)
 
   pathToSql <- system.file("sql",
-                           "sql_server",
-                           "distributions",
-                           sqlFileName,
-                           package = packageName
+    "sql_server",
+    "distributions",
+    sqlFileName,
+    package = packageName
   )
 
   pathToAggregSql <- system.file("sql",
-                                 "sql_server",
-                                 "distributions",
-                                 "DistributiveStatistics.sql",
-                                 package = packageName
+    "sql_server",
+    "distributions",
+    "DistributiveStatistics.sql",
+    package = packageName
   )
 
   sql <- readChar(pathToSql, file.info(pathToSql)$size)
   sqlAggreg <- readChar(pathToAggregSql, file.info(pathToAggregSql)$size)
   sql <- paste0(sql, sqlAggreg)
   sql <- SqlRender::render(sql,
-                           cohortDatabaseSchema = cohortDatabaseSchema,
-                           cdmDatabaseSchema = cdmDatabaseSchema,
-                           cohortTable = cohortTable,
-                           targetIds = targetIds,
-                           analysisName = analysisName,
-                           warnOnMissingParameters = FALSE
+    cohortDatabaseSchema = cohortDatabaseSchema,
+    cdmDatabaseSchema = cdmDatabaseSchema,
+    cohortTable = cohortTable,
+    targetIds = targetIds,
+    analysisName = analysisName,
+    warnOnMissingParameters = FALSE
   )
   sql <- SqlRender::translate(sql, targetDialect = connection@dbms)
 

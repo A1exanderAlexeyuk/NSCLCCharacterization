@@ -54,10 +54,10 @@ createCohortTable <- function(connectionDetails = NULL,
     on.exit(DatabaseConnector::disconnect(connection))
   }
   sql <- SqlRender::loadRenderTranslateSql("CreateCohortTable.sql",
-                                           packageName = getThisPackageName(),
-                                           dbms = connection@dbms,
-                                           cohort_database_schema = cohortDatabaseSchema,
-                                           cohort_table = cohortTable
+    packageName = getThisPackageName(),
+    dbms = connection@dbms,
+    cohort_database_schema = cohortDatabaseSchema,
+    cohort_table = cohortTable
   )
   DatabaseConnector::executeSql(connection, sql, progressBar = FALSE, reportOverallTime = FALSE)
   ParallelLogger::logDebug("- Created table ", cohortDatabaseSchema, ".", cohortTable)
@@ -65,13 +65,13 @@ createCohortTable <- function(connectionDetails = NULL,
   if (createInclusionStatsTables) {
     ParallelLogger::logInfo("Creating inclusion rule statistics tables")
     sql <- SqlRender::loadRenderTranslateSql("CreateInclusionStatsTables.sql",
-                                             packageName = getThisPackageName(),
-                                             dbms = connectionDetails$dbms,
-                                             cohort_database_schema = resultsDatabaseSchema,
-                                             cohort_inclusion_table = cohortInclusionTable,
-                                             cohort_inclusion_result_table = cohortInclusionResultTable,
-                                             cohort_inclusion_stats_table = cohortInclusionStatsTable,
-                                             cohort_summary_stats_table = cohortSummaryStatsTable
+      packageName = getThisPackageName(),
+      dbms = connectionDetails$dbms,
+      cohort_database_schema = resultsDatabaseSchema,
+      cohort_inclusion_table = cohortInclusionTable,
+      cohort_inclusion_result_table = cohortInclusionResultTable,
+      cohort_inclusion_stats_table = cohortInclusionStatsTable,
+      cohort_summary_stats_table = cohortSummaryStatsTable
     )
     DatabaseConnector::executeSql(connection, sql, progressBar = FALSE, reportOverallTime = FALSE)
     ParallelLogger::logDebug("- Created table ", cohortDatabaseSchema, ".", cohortInclusionTable)
@@ -259,7 +259,7 @@ processInclusionStats <- function(inclusion,
     result <- merge(
       unique(inclusion[, c("ruleSequence", "name")]),
       inclusionStats[inclusionStats$modeId ==
-                       0, c("ruleSequence", "personCount", "gainCount", "personTotal")],
+        0, c("ruleSequence", "personCount", "gainCount", "personTotal")],
     )
 
     result$remain <- rep(0, nrow(result))
@@ -368,32 +368,32 @@ instantiateCohortSet <- function(connectionDetails = NULL,
 
       if (generateInclusionStats) {
         sql <- SqlRender::render(sql,
-                                 cdm_database_schema = cdmDatabaseSchema,
-                                 vocabulary_database_schema = cdmDatabaseSchema,
-                                 target_database_schema = cohortDatabaseSchema,
-                                 target_cohort_table = cohortTable,
-                                 target_cohort_id = cohorts$cohortId[i],
-                                 results_database_schema.cohort_inclusion = "#cohort_inclusion",
-                                 results_database_schema.cohort_inclusion_result = "#cohort_inc_result",
-                                 results_database_schema.cohort_inclusion_stats = "#cohort_inc_stats",
-                                 results_database_schema.cohort_summary_stats = "#cohort_summary_stats",
-                                 warnOnMissingParameters = FALSE,
-                                 episodetable = FALSE
+          cdm_database_schema = cdmDatabaseSchema,
+          vocabulary_database_schema = cdmDatabaseSchema,
+          target_database_schema = cohortDatabaseSchema,
+          target_cohort_table = cohortTable,
+          target_cohort_id = cohorts$cohortId[i],
+          results_database_schema.cohort_inclusion = "#cohort_inclusion",
+          results_database_schema.cohort_inclusion_result = "#cohort_inc_result",
+          results_database_schema.cohort_inclusion_stats = "#cohort_inc_stats",
+          results_database_schema.cohort_summary_stats = "#cohort_summary_stats",
+          warnOnMissingParameters = FALSE,
+          episodetable = FALSE
         )
       } else {
         sql <- SqlRender::render(sql,
-                                 cdm_database_schema = cdmDatabaseSchema,
-                                 vocabulary_database_schema = cdmDatabaseSchema,
-                                 target_database_schema = cohortDatabaseSchema,
-                                 target_cohort_table = cohortTable,
-                                 target_cohort_id = cohorts$cohortId[i],
-                                 warnOnMissingParameters = FALSE,
-                                 episodetable = FALSE
+          cdm_database_schema = cdmDatabaseSchema,
+          vocabulary_database_schema = cdmDatabaseSchema,
+          target_database_schema = cohortDatabaseSchema,
+          target_cohort_table = cohortTable,
+          target_cohort_id = cohorts$cohortId[i],
+          warnOnMissingParameters = FALSE,
+          episodetable = FALSE
         )
       }
       sql <- SqlRender::translate(sql,
-                                  targetDialect = connectionDetails$dbms,
-                                  oracleTempSchema = oracleTempSchema
+        targetDialect = connectionDetails$dbms,
+        oracleTempSchema = oracleTempSchema
       )
       DatabaseConnector::executeSql(connection, sql)
       instantiatedCohortIds <- c(instantiatedCohortIds, cohorts$cohortId[i])

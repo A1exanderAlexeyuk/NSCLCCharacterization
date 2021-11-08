@@ -14,10 +14,10 @@ generateSurvival <- function(connection,
 
   survOutputs <- purrr::map_dfr(targetIds, function(targetId) {
     sqlTmp <- SqlRender::render(sql,
-                                cohort_database_schema = cohortDatabaseSchema,
-                                cohort_table = cohortTable,
-                                outcome_id = outcomeId,
-                                target_id = targetId
+      cohort_database_schema = cohortDatabaseSchema,
+      cohort_table = cohortTable,
+      outcome_id = outcomeId,
+      target_id = targetId
     )
     sqlTmp <- SqlRender::translate(
       sql = sqlTmp,
@@ -87,7 +87,7 @@ generateKaplanMeierDescriptionTNT <- function(connection,
     sqlTmp <- SqlRender::translate(
       sql = sqlRendered,
       targetDialect = connection@dbms
-                                   )
+    )
 
     km_proc <- as.data.frame(DatabaseConnector::querySql(
       connection = connection,
@@ -96,7 +96,7 @@ generateKaplanMeierDescriptionTNT <- function(connection,
     ))
 
     survInfo <- survival::survfit(survival::Surv(timeToEvent, event) ~ 1,
-                                  data = km_proc
+      data = km_proc
     )
 
 
@@ -139,7 +139,7 @@ generateKaplanMeierDescriptionTFITTD <- function(connection,
   )
 
   linesTreatmentOutput <- purrr::map_dfr(sql_s, function(sql) {
-    purrr::map_df(targetIds, function(targetId){
+    purrr::map_df(targetIds, function(targetId) {
       if (is.na(stringr::str_locate(
         sql,
         outcome
@@ -156,8 +156,9 @@ generateKaplanMeierDescriptionTFITTD <- function(connection,
         regimenStatsTable = regimenStatsTable
       )
 
-      sqlTmp <- SqlRender::translate(sql = sqlRendered,
-                                     targetDialect = connection@dbms
+      sqlTmp <- SqlRender::translate(
+        sql = sqlRendered,
+        targetDialect = connection@dbms
       )
 
       km_proc <- as.data.frame(DatabaseConnector::querySql(
@@ -166,29 +167,28 @@ generateKaplanMeierDescriptionTFITTD <- function(connection,
         snakeCaseToCamelCase = T
       ))
 
-      nest_km <- km_proc %>%
+      km_proc_2 <- km_proc %>%
         tidyr::nest(data = !lineOfTherapy) %>%
-        dplyr::mutate(survInfo = purrr::map(
-          data,
-          ~ survival::survfit(survival::Surv(
-            timeToEvent,
-            event
+        dplyr::mutate(survfit_output = purrr::map(
+          data, ~ survival::survfit(
+            survival::Surv(
+              timeToEvent, event
+            ) ~ event,
+            data = .
           )
-          ~ 1, data = .)
         ))
 
-      survivalSummary <- survInfo %>%
-        dplyr::mutate(result = purrr::map(nest_km, broom::tidy)) %>%
-        dplyr::select(
-          targetId = targetId, outcomeId = outcomeId,
-          lineOfTherapy, result, databaseId = databaseId
-        ) %>%
+
+      survivalSummary <- km_proc_2 %>%
+        dplyr::mutate(result = purrr::map(survfit_output, broom::tidy)) %>%
+        dplyr::select(lineOfTherapy, result) %>%
         tidyr::unnest(cols = c(result))
+
 
       data.frame(
         targetId = targetId,
         outcomeId = outcomeId,
-        lineOfTherapy = lineOfTherapy,
+        lineOfTherapy = survivalSummary$lineOfTherapy,
         time = survivalSummary$time,
         surv = survivalSummary$estimate,
         n.censor = survivalSummary$n.censor,
