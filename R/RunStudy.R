@@ -2,7 +2,8 @@
 runStudy <- function(connectionDetails = NULL,
                      connection = NULL,
                      cdmDatabaseSchema,
-                     oracleTempSchema = NULL,
+                     tempEmulationSchema = NULL,
+                     oracleDatabaseSchema = NULL,
                      cohortDatabaseSchema,
                      cohortStagingTable = "cohort_stg",
                      cohortTable = "cohort",
@@ -10,11 +11,11 @@ runStudy <- function(connectionDetails = NULL,
                      cohortIdsToExcludeFromExecution = c(),
                      cohortIdsToExcludeFromResultsExport = NULL,
                      cohortGroups = getUserSelectableCohortGroups(),
+                     createRegimenStats = TRUE,
                      exportFolder,
                      databaseId,
                      databaseName = databaseId,
                      databaseDescription = "",
-                     useBulkCharacterization = FALSE,
                      minCellCount = 5) {
   start <- Sys.time()
 
@@ -128,6 +129,8 @@ runStudy <- function(connectionDetails = NULL,
 
 
   # Generate  regimen stats table -----------------------------------------------------------------
+if(createRegimenStats){
+  if(!is.null(regimenIngredientsTable)){
 
   createRegimenStatsTable <- createcreateRegimenStats(
     connection = connection,
@@ -138,6 +141,9 @@ runStudy <- function(connectionDetails = NULL,
     regimenIngredientsTable = regimenIngredientsTable,
     gapBetweenTreatment = 120
   )
+  }else{
+    ParallelLogger::logInfo("Specify regimen ingredients table")
+  }
 
   # Generate categorized regimens  info -----------------------------------------------------------------
 
@@ -149,11 +155,11 @@ runStudy <- function(connectionDetails = NULL,
     targetIds = targetIds
   )
 
-  writeToCsv(SurvivalInfo, file.path(
+  writeToCsv(categorizedRegimens, file.path(
     exportFolder,
     "categorizedRegimens_info.csv"
   ))
-
+}
   # Generate survival info -----------------------------------------------------------------
 
   ParallelLogger::logInfo("Generating survival info")
@@ -177,8 +183,7 @@ runStudy <- function(connectionDetails = NULL,
   writeToCsv(SurvivalInfo, file.path(
     exportFolder,
     "Survuval_info.csv"
-  ),
-  incremental = F,
+  )
   targetId = SurvivalInfo$targetId
   )
 
