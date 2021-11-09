@@ -183,7 +183,7 @@ if(createRegimenStats){
   writeToCsv(SurvivalInfo, file.path(
     exportFolder,
     "Survuval_info.csv"
-  )
+  ),
   targetId = SurvivalInfo$targetId
   )
 
