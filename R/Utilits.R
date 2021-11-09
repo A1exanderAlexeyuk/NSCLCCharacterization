@@ -91,10 +91,3 @@ getCovariatesToInclude <- function() {
     438112
   )
 }
-
-readCsv <- function(resourceFile) {
-  packageName <- getThisPackageName()
-  pathToCsv <- system.file(resourceFile, package = packageName, mustWork = TRUE)
-  fileContents <- readr::read_csv(pathToCsv, col_types = readr::cols())
-  return(fileContents)
-}

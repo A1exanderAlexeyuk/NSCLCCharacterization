@@ -44,32 +44,42 @@ WITH cte AS (SELECT cohort_definition_id,
 
            FROM @cohortDatabaseSchema.@regimenStatsTable
            ORDER BY 1, 3, 2
-           WHERE cohort_definition_id IN (@targetId))
+           WHERE cohort_definition_id IN (@targetIds))
 
 SELECT cohort_definition_id,
        person_id,
        Line_of_therapy,
 
-      (case when EGFR_tyrosine_kinase_inhibitors = 1
+      (case when EGFR_tyrosine_kinase_inhibitors = 1 AND
+      Other_EGFR_tyrosine_kinase_inhibitors +
+      Anti_PD_1 + Anti_L_1 + Platinum_doublet + Single_agent + anti_VEGF_mAb = 0
         then  'Reimen_1'
 
-      when Other_EGFR_tyrosine_kinase_inhibitors = 1
+      when Other_EGFR_tyrosine_kinase_inhibitors = 1 AND EGFR_tyrosine_kinase_inhibitors +
+      Anti_PD_1 + Anti_L_1 + Platinum_doublet + Single_agent + anti_VEGF_mAb = 0
         then  'Reimen_2'
 
       when Platinum_doublet = 1 AND Anti_PD_1 + Platinum_doublet +
       anti_VEGF_mAb >= 2 OR  Anti_L_1  + Platinum_doublet +
       anti_VEGF_mAb >= 2 OR Platinum_doublet + Anti_CTLA_4 +  anti_VEGF_mAb > 2
+      AND Other_EGFR_tyrosine_kinase_inhibitors + EGFR_tyrosine_kinase_inhibitors +
+      Single_agent = 0
         then 'Regimen_4'
 
       when Platinum_doublet + anti_VEGF_mAb = 0 AND Anti_PD_1 + Anti_L_1
-      + Anti_CTLA_4 >= 2
+      + Anti_CTLA_4 >= 2 AND Other_EGFR_tyrosine_kinase_inhibitors +
+      EGFR_tyrosine_kinase_inhibitors + Single_agent = 0
       then 'Regimen_3'
 
       when Platinum_doublet + anti_VEGF_mAb >= 1 AND Anti_PD_1 + Anti_L_1
-      + Anti_CTLA_4 = 0 AND  Platinum_doublet = 1
+      + Anti_CTLA_4 = 0 AND  Platinum_doublet = 1 AND Other_EGFR_tyrosine_kinase_inhibitors +
+      EGFR_tyrosine_kinase_inhibitors + Single_agent = 0
       then 'Regimen_5'
 
       when Single_agent + anti_VEGF_mAb >= 1 AND Single_agent = 1
+      AND Other_EGFR_tyrosine_kinase_inhibitors +
+      EGFR_tyrosine_kinase_inhibitors + Platinum_doublet + Anti_CTLA_4
+      + Anti_PD_1 + Anti_L_1 = 0
       then 'Regimen_6'
 
       else 'Other' end) AS Regimens_categories

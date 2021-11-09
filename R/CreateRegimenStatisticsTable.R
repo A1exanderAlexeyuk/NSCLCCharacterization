@@ -58,12 +58,12 @@ createCategorizedRegimensTable <- function(connection,
     "RegimenCategories.sql"
   ))
 
-  categorizedRegimensOutput <- purrr::map_df(targetIds, function(targetId) {
+
     sqlTmp <- SqlRender::render(
       sql = sql,
       cohortDatabaseSchema = cohortDatabaseSchema,
       cohortTable = cohortTable,
-      targetId = targetId
+      targetIds = targetIds
     )
 
     sqlTmp <- SqlRender::translate(
@@ -76,5 +76,5 @@ createCategorizedRegimensTable <- function(connection,
       sql = sqlTmp,
       snakeCaseToCamelCase = T
     ))
-  })
+
 }

@@ -1,111 +1,169 @@
-# Make sure to install all dependencies (not needed if already done):
-install.packages("SqlRender")
-install.packages("DatabaseConnector")
-install.packages("ggplot2")
-install.packages("ParallelLogger")
-install.packages("readr")
-install.packages("tibble")
-install.packages("dplyr")
-install.packages("RJSONIO")
+# *******************************************************
+# -----------------INSTRUCTIONS -------------------------
+# *******************************************************
+#
+#-----------------------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------------------------
+# This CodeToRun.R is provided as an example of how to run this study package.
+# Below you will find 2 sections: the 1st is for installing the dependencies
+# required to run the study and the 2nd for running the package.
+#
+# The code below makes use of R environment variables (denoted by "Sys.getenv(<setting>)") to
+# allow for protection of sensitive information. If you'd like to use R environment variables stored
+# in an external file, this can be done by creating an .Renviron file in the root of the folder
+# where you have cloned this code. For more information on setting environment variables please refer to:
+# https://stat.ethz.ch/R-manual/R-devel/library/base/html/readRenviron.html
+#
+#
+# Below is an example .Renviron file's contents: (please remove)
+# the "#" below as these too are interprted as comments in the .Renviron file:
+#
+#    DBMS = "postgresql"
+#    DB_SERVER = "database.server.com"
+#    DB_PORT = 5432
+#    DB_USER = "database_user_name_goes_here"
+#    DB_PASSWORD = "your_secret_password"
+#    FFTEMP_DIR = "E:/fftemp"
+#    CDM_SCHEMA = "your_cdm_schema"
+#    COHORT_SCHEMA = "public"  # or other schema to write intermediate results to
+#    PATH_TO_DRIVER = "/path/to/jdbc_driver"
+#
+# The following describes the settings
+#    DBMS, DB_SERVER, DB_PORT, DB_USER, DB_PASSWORD := These are the details used to connect
+#    to your database server. For more information on how these are set, please refer to:
+#    http://ohdsi.github.io/DatabaseConnector/
+#
+#    FFTEMP_DIR = A directory where temporary files used by the FF package are stored while running.
+#
+#
+# Once you have established an .Renviron file, you must restart your R session for R to pick up these new
+# variables.
+#
+# In section 2 below, you will also need to update the code to use your site specific values. Please scroll
+# down for specific instructions.
+#-----------------------------------------------------------------------------------------------
+#
+#
+# *******************************************************
+# SECTION 1: Install the package and its dependencies (not needed if already done) -------------
+# *******************************************************
+#
+#
+# First, it probably is best to make sure you are up-to-date on all existing packages.
+# Important: This code is best run in R, not RStudio, as RStudio may have some libraries
+# (like 'rlang') in use.
+update.packages(ask = "graphics")
+
+# When asked to update packages, select '1' ('update all') (could be multiple times)
+# When asked whether to install from source, select 'No' (could be multiple times)
 install.packages("devtools")
-devtools::install_github("FeatureExtraction")
-devtools::install_github("ROhdsiWebApi")
-devtools::install_github("CohortDiagnostics")
+devtools::install_github("A1exanderAlexeyuk/NSCLCCharacterization")
 
+# If this runs correctly, it should have installed the package and its dependencies, and you can proceed to section 2.
 
-# Load the package
-library(LungCancerCharacterization)
+# *******************************************************
+# SECTION 2: Running the package ---------------------------------------------------------------
+# *******************************************************
+library(NSCLCCharacterization)
 
-# Optional: specify where the temporary files will be created:
-options(andromedaTempFolder = "s:/andromedaTemp")
-
-# Maximum number of cores to be used:
-maxCores <- parallel::detectCores()
-
+# Optional: specify where the temporary files (used by the ff package) will be created:
+fftempdir <- if (Sys.getenv("FFTEMP_DIR") == "") "~/fftemp" else Sys.getenv("FFTEMP_DIR")
+options(fftempdir = fftempdir)
 
 # Details for connecting to the server:
-connectionDetails <- DatabaseConnector::createConnectionDetails(dbms = "pdw",
-                                                                server = Sys.getenv("PDW_SERVER"),
-                                                                user = NULL,
-                                                                password = NULL,
-                                                                port = Sys.getenv("PDW_PORT"))
+dbms = Sys.getenv("DBMS")
+user <- if (Sys.getenv("DB_USER") == "") NULL else Sys.getenv("DB_USER")
+password <- if (Sys.getenv("DB_PASSWORD") == "") NULL else Sys.getenv("DB_PASSWORD")
+# password <- Sys.getenv("DB_PASSWORD")
+server = Sys.getenv("DB_SERVER")
+port = Sys.getenv("DB_PORT")
+extraSettings <- if (Sys.getenv("DB_EXTRA_SETTINGS") == "") NULL else Sys.getenv("DB_EXTRA_SETTINGS")
+pathToDriver <- if (Sys.getenv("PATH_TO_DRIVER") == "") NULL else Sys.getenv("PATH_TO_DRIVER")
+connectionString <- if (Sys.getenv("CONNECTION_STRING") == "") NULL else Sys.getenv("CONNECTION_STRING")
+
+connectionDetails <- DatabaseConnector::createConnectionDetails(dbms = dbms,
+                                                                user = user,
+                                                                password = password,
+                                                                server = server,
+                                                                port = port,
+                                                                connectionString = connectionString,
+                                                                pathToDriver = pathToDriver)
+
+
 
 # For Oracle: define a schema that can be used to emulate temp tables:
-oracleTempSchema <- NULL
+tempEmulationSchema <- NULL
 
 # Details specific to the database:
-outputFolder <- paste0(getwd(),"/results")
-cdmDatabaseSchema <- "cdm_ibm_mdcd_v1023.dbo"
-cohortDatabaseSchema <- "scratch.dbo"
-cohortTable <- "mschuemi_skeleton_mdcd"
-databaseId <- "MDCD"
-databaseName <- "Truven Health MarketScan® Multi-State Medicaid Database"
-databaseDescription <- "Truven Health MarketScan® Multi-State Medicaid Database (MDCD) adjudicated US health insurance claims for Medicaid enrollees from multiple states and includes hospital discharge diagnoses, outpatient diagnoses and procedures, and outpatient pharmacy claims as well as ethnicity and Medicare eligibility. Members maintain their same identifier even if they leave the system for a brief period however the dataset lacks lab data. [For further information link to RWE site for Truven MDCD."
+databaseId <- "SP"
+databaseName <- "Synpuf"
+databaseDescription <- "Testing"
+outputFolderPath <- getwd() # if needed, set up a different path for results
 
-# Use this to run the cohorttDiagnostics. The results will be stored in the diagnosticsExport subfolder of the outputFolder. This can be shared between sites.
+# Details for connecting to the CDM and storing the results
+regimenIngredientsTable <- "name_of_your_regimen_stats_table" #sql db an output on OncologyRegimenFinder
+gapBetweenTreatment <- 120 # specify gap between lines what will be used as a difinition on TTD
+outputFolder <- normalizePath(file.path(outputFolderPath, databaseId))
+cdmDatabaseSchema <- Sys.getenv("CDM_SCHEMA")
+cohortDatabaseSchema <- Sys.getenv("COHORT_SCHEMA")
+cohortTable <- paste0("NSCLC_", databaseId)
+cohortStagingTable <- paste0(cohortTable, "_stg")
+featureSummaryTable <- paste0(cohortTable, "_smry")
+minCellCount <- 5
+cohortIdsToExcludeFromExecution <- c()
+cohortIdsToExcludeFromResultsExport <- NULL
+
+# For uploading the results. You should have received the key file from the study coordinator, input the correct path here:
+keyFileName <- "your-home-folder-here/.ssh/study-data-site-NSCLC"
+userName <- "study-data-site-NSCLC"
+
+# Run cohort diagnostics -----------------------------------
 runCohortDiagnostics(connectionDetails = connectionDetails,
                      cdmDatabaseSchema = cdmDatabaseSchema,
                      cohortDatabaseSchema = cohortDatabaseSchema,
-                     cohortTable = cohortTable,
-                     oracleTempSchema = oracleTempSchema,
-                     outputFolder = outputFolder,
+                     cohortStagingTable = cohortStagingTable,
+                     tempEmulationSchema = tempEmulationSchema,
+                     cohortIdsToExcludeFromExecution = cohortIdsToExcludeFromExecution,
+                     exportFolder = outputFolder,
                      databaseId = databaseId,
                      databaseName = databaseName,
                      databaseDescription = databaseDescription,
-                     createCohorts = TRUE,
-                     runInclusionStatistics = TRUE,
-                     runIncludedSourceConcepts = TRUE,
-                     runOrphanConcepts = TRUE,
-                     runTimeDistributions = TRUE,
-                     runBreakdownIndexEvents = TRUE,
-                     runIncidenceRates = TRUE,
-                     runCohortOverlap = TRUE,
-                     runCohortCharacterization = TRUE,
-                     minCellCount = 5)
-
-# To view the results:
-# Optional: if there are results zip files from multiple sites in a folder, this merges them, which will speed up starting the viewer:
-CohortDiagnostics::preMergeDiagnosticsFiles(file.path(outputFolder, "diagnosticsExport"))
-
-# Use this to view the results. Multiple zip files can be in the same folder. If the files were pre-merged, this is automatically detected: 
-CohortDiagnostics::launchDiagnosticsExplorer(file.path(outputFolder, "diagnosticsExport"))
+                     minCellCount = minCellCount)
 
 
-# To explore a specific cohort in the local database, viewing patient profiles:
-CohortDiagnostics::launchCohortExplorer(connectionDetails = connectionDetails,
-                                        cdmDatabaseSchema = cdmDatabaseSchema,
-                                        cohortDatabaseSchema = cohortDatabaseSchema,
-                                        cohortTable = cohortTable,
-                                        cohortId = 123)
-# Where 123 is the ID of the cohort you wish to inspect.
+# CohortDiagnostics::launchDiagnosticsExplorer(file.path(outputFolder, "diagnostics", "target"))
+
+# When finished with reviewing the diagnostics, use the next command
+# to upload the diagnostic results
+uploadDiagnosticsResults(outputFolder, keyFileName, userName)
 
 
-###########BC Outcomes #####################
-regimenIngredientsTable <- "hms_cancer_regimen_ingredients"
-deathTable <- "death"
-count_mask <- 10
+# Use this to run the study. The results will be stored in a zip file called
+# 'Results_<databaseId>.zip in the outputFolder.
+runStudy(connectionDetails = connectionDetails,
+         cdmDatabaseSchema = cdmDatabaseSchema,
+         cohortDatabaseSchema = cohortDatabaseSchema,
+         cohortStagingTable = cohortStagingTable,
+         cohortTable = cohortTable,
+         featureSummaryTable = featureSummaryTable,
+         oracleTempSchema = cohortDatabaseSchema,
+         regimenIngredientsTable = NULL,
+         createRegimenStats = FALSE,
+         gapBetweenTreatment = gapBetweenTreatment,
+         exportFolder = outputFolder,
+         databaseId = databaseId,
+         databaseName = databaseName,
+         databaseDescription = databaseDescription,
+         cohortIdsToExcludeFromExecution = cohortIdsToExcludeFromExecution,
+         cohortIdsToExcludeFromResultsExport = cohortIdsToExcludeFromResultsExport,
+         minCellCount = minCellCount)
 
-library(tidyverse)
-#install.packages("lubridate")
-library(lubridate)
-#install.packages("toOrdinal")
-#library(toOrdinal)
-#install.packages("RColorBrewer")
-library(RColorBrewer)
-#install.packages("survival")
-library(survival)
 
-#### Run
-source("extras/regimen_stats.R")
-outputFolder <- paste0(getwd(),"/results/Additional")
+# Use the next set of commands to compress results
+# and view the output.
+preMergeResultsFiles(outputFolder)
 
-write.csv(population_summary, file.path(outputFolder, "population_summary.csv"))
-write.csv(stats_by_line, file.path(outputFolder, "lines_of_treatment.csv"))
-write.csv(regimens_by_treatment_line, file.path(outputFolder, "regimens_by_line.csv"))
-write.csv(yearly_regimens_by_treatment_line, file.path(outputFolder, "yearly_regimens_by_line.csv"))
-write.csv(km_outputs$OS, file.path(outputFolder, "os_km.csv"))
-write.csv(km_outputs$TTNT, file.path(outputFolder, "ttnt_km.csv"))
-write.csv(km_outputs$TTD, file.path(outputFolder, "ttd.csv"))
+# When finished with reviewing the results, use the next command
+# upload study results to OHDSI SFTP server:
+uploadStudyResults(outputFolder, keyFileName, userName)
 
-write.csv(km_outputs$TFI, file.path(outputFolder, "tfi_km.csv"))
-write.csv(ages, file.path(outputFolder, "age.csv"))

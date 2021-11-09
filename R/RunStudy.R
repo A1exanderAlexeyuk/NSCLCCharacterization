@@ -11,6 +11,7 @@ runStudy <- function(connectionDetails = NULL,
                      cohortIdsToExcludeFromExecution = c(),
                      cohortIdsToExcludeFromResultsExport = NULL,
                      cohortGroups = getUserSelectableCohortGroups(),
+                     regimenIngredientsTable = regimenIngredientsTable,
                      createRegimenStats = TRUE,
                      exportFolder,
                      databaseId,
@@ -46,7 +47,7 @@ runStudy <- function(connectionDetails = NULL,
     connection <- DatabaseConnector::connect(connectionDetails)
     on.exit(DatabaseConnector::disconnect(connection))
   }
-
+  #targetIdsTreatmentIndex <- list(101, 102, 103)
   # Instantiate cohorts -----------------------------------------------------------------------
   cohorts <- getCohortsToCreate()
   # Remove any cohorts that are to be excluded
@@ -131,7 +132,6 @@ runStudy <- function(connectionDetails = NULL,
   # Generate  regimen stats table -----------------------------------------------------------------
 if(createRegimenStats){
   if(!is.null(regimenIngredientsTable)){
-
   createRegimenStatsTable <- createcreateRegimenStats(
     connection = connection,
     cdmDatabaseSchema = cdmDatabaseSchema,
@@ -142,17 +142,20 @@ if(createRegimenStats){
     gapBetweenTreatment = 120
   )
   }else{
-    ParallelLogger::logInfo("Specify regimen ingredients table")
+    ParallelLogger::logWarn("Specify regimen ingredients table")
   }
 
   # Generate categorized regimens  info -----------------------------------------------------------------
 
+
+
+  ParallelLogger::logInfo("Generating regimen categories")
   categorizedRegimens <- createCategorizedRegimensTable(
     connection = connection,
     cohortDatabaseSchema = cohortDatabaseSchema,
     cohortTable = cohortStagingTable,
     regimenStatsTable = regimenStatsTable,
-    targetIds = targetIds
+    targetIds = targetIdsTreatmentIndex
   )
 
   writeToCsv(categorizedRegimens, file.path(
@@ -160,10 +163,11 @@ if(createRegimenStats){
     "categorizedRegimens_info.csv"
   ))
 }
+
   # Generate survival info -----------------------------------------------------------------
 
   ParallelLogger::logInfo("Generating survival info")
-  targetIds <- allStudyCohorts[[2]][1:3] # check cohorts!
+
 
   KMOutcomes <- getFeatures()
   KMOutcomesIds <- KMOutcomes$cohortId[1]
@@ -171,20 +175,16 @@ if(createRegimenStats){
     connection = connection,
     cohortDatabaseSchema = cohortDatabaseSchema,
     cohortTable = cohortStagingTable,
-    targetIds = targetIds,
+    targetIds = targetIdsTreatmentIndex,
     outcomeIds = KMOutcomesIds,
     databaseId = databaseId,
     packageName = getThisPackageName()
   )
-
-
   KMOutcomesIds <- KMOutcomes$cohortId[KMOutcomes$name %in% c("Death")]
-
   writeToCsv(SurvivalInfo, file.path(
     exportFolder,
     "Survuval_info.csv"
-  ),
-  targetId = SurvivalInfo$targetId
+  )
   )
 
   # Generate treatment outcomes info -----------------------------------------------------
@@ -192,12 +192,13 @@ if(createRegimenStats){
   ParallelLogger::logInfo(" ---- Treatment statistics  ---- ")
   ParallelLogger::logInfo("**********************************************************")
   # time to treatment initiation
+  outcomesTI <- KMOutcomes$cohortId[KMOutcomes$name %in% c("Treatment initiation")]
   timeToTI <- generateTimeToTreatmenInitiationStatistics(
     connection = connection,
     cohortDatabaseSchema,
     cohortTable = cohortStagingTable,
-    targetIds = targetIds,
-    outcomeId = outcomeId,
+    targetIds = c(104, 105, 106), # condition index cohorts
+    outcomeId = outcomesTI,
     databaseId = databaseId
   )
   writeToCsv(timeToTI, file.path(
@@ -211,21 +212,22 @@ if(createRegimenStats){
     cohortDatabaseSchema = cohortDatabaseSchema,
     regimenStatsTable = regimenStatsTable,
     cohortTable = cohortStagingTable,
-    targetIds = targetIds,
+    targetIds = targetIdsTreatmentIndex,
     databaseId = databaseId
   )
 
-  writeToCsv(timeToTI, file.path(
+  writeToCsv(timeToNT, file.path(
     exportFolder,
     "timeToNT.csv"
-  ))
+   )
+  )
 
   # treatment free interval and time to treatment discontinuation
   TFI_TTD <- generateKaplanMeierDescriptionTFI_TTD(
     connection = connection,
     cohortDatabaseSchema = cohortDatabaseSchema,
     regimenStatsTable = regimenStatsTable,
-    targetIds = targetIds,
+    targetIds = targetIdsTreatmentIndex,
     databaseId = databaseId
   )
 
@@ -239,7 +241,7 @@ if(createRegimenStats){
 
 
   # prepare necessary tables
-  targetIdsFormatted <- paste(targetIds, collapse = ", ")
+  targetIdsFormatted <- targetIdsTreatmentIndex
   pathToSql <- system.file("sql", "sql_server",
     "distributions", "IQRComplementaryTables.sql",
     package = getThisPackageName()
@@ -284,8 +286,7 @@ if(createRegimenStats){
   writeToCsv(metricsDistribution, file.path(
     exportFolder,
     "metrics_distribution.csv"
-  ),
-  cohortDefinitionId = metricsDistribution$cohortDefinitionId
+    )
   )
   # drom temp tables
   pathToSql <- system.file("sql",
@@ -323,51 +324,21 @@ if(createRegimenStats){
   cohortsForExport <- loadCohortsForExportFromPackage(cohortIds = counts$cohortId)
   writeToCsv(cohortsForExport, file.path(exportFolder, "cohort.csv"))
 
-  # Extract feature counts -----------------------------------------------------------------------
-  ParallelLogger::logInfo("Extract feature counts")
-  featureProportions <- exportFeatureProportions(
-    connection = connection,
-    cohortDatabaseSchema = cohortDatabaseSchema,
-    cohortTable = cohortTable,
-    featureSummaryTable = featureSummaryTable
-  )
-  if (nrow(featureProportions) > 0) {
-    featureProportions$databaseId <- databaseId
-    featureProportions <- enforceMinCellValue(
-      featureProportions, "featureCount",
-      minCellCount
-    )
-    featureProportions <- featureProportions[featureProportions$totalCount >=
-      getMinimumSubjectCountForCharacterization(), ]
-  }
-  features <- formatCovariates(featureProportions)
-  writeToCsv(features, file.path(exportFolder, "covariate.csv"),
-    covariateId = features$covariateId
-  )
-  featureValues <- formatCovariateValues(featureProportions, counts, minCellCount, databaseId)
-  featureValues <- featureValues[, c("cohortId", "covariateId", "mean", "sd", "databaseId")]
-  writeToCsv(featureValues, file.path(exportFolder, "covariate_value.csv"),
-    cohortId = featureValues$cohortId, covariateId = featureValues$covariateId
-  )
-  # Also keeping a raw output for debugging
-  writeToCsv(featureProportions, file.path(exportFolder, "feature_proportions.csv"))
-
   # Cohort characterization ---------------------------------------------------------------
-  # Note to package maintainer: If any of the logic to this changes, you'll need to revist
-  # the function createBulkCharacteristics
-  runCohortCharacterization <- function(cohortId,
-                                        cohortName,
-                                        covariateSettings,
-                                        curIndex,
-                                        totalCount) {
+  runCohortCharacterization <- function() {
     data <- getCohortCharacteristics(
       connection = connection,
       cdmDatabaseSchema = cdmDatabaseSchema,
       oracleTempSchema = oracleTempSchema,
       cohortDatabaseSchema = cohortDatabaseSchema,
       cohortTable = cohortTable,
-      cohortId = cohortId,
-      covariateSettings = covariateSettings
+      cohortId = targetIdsTreatmentIndex,
+      covariateSettings = FeatureExtraction::createDefaultCovariateSettings(
+        includedCovariateConceptIds = getCovariatesToInclude(),
+        addDescendantsToInclude = TRUE,
+        excludedCovariateConceptIds = 4162276, # melanoma
+        addDescendantsToExclude = TRUE
+      )
     )
     if (nrow(data) > 0) {
       data$cohortId <- cohortId
@@ -376,14 +347,11 @@ if(createRegimenStats){
     return(data)
   }
 
-  # Subset the cohorts to the target/strata for running feature extraction
-  # that are >= 140 per protocol to improve efficency
-  featureExtractionCohorts <-
-    loadCohortsForExportWithChecksumFromPackage(counts[
-      counts$cohortSubjects
-      >= getMinimumSubjectCountForCharacterization(),
-      c("cohortId")
-    ]$cohortId)
+  data <- runCohortCharacterization()
+  covariates <- formatCovariates(data)
+  writeToCsv(covariates, file.path(exportFolder, "covariate.csv"))
+  data <- formatCovariateValues(data, counts, minCellCount, databaseId)
+  writeToCsv(data, file.path(exportFolder, "covariate_value.csv"))
 
 
   # Format results -----------------------------------------------------------------------------------
@@ -627,3 +595,4 @@ getCohortCounts <- function(connectionDetails = NULL,
   ))
   return(counts)
 }
+
