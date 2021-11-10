@@ -1,5 +1,6 @@
 #' Execute the cohort diagnostics
 #'
+#'
 #' @details
 #' This function executes the cohort diagnostics.
 #'
