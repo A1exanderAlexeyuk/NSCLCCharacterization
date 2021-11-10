@@ -25,14 +25,14 @@ test_that("Cohort Diagnostics", {
     port = Sys.getenv("testport")
   )
   conn <- connect(connectionDetails = connectionDetails)
-
+  outputFolder <- getwd()
   expect_error(NSCLCCharacterization::runCohortDiagnostics(connection = conn,
                                                           connectionDetails = connectionDetails,
                                                            cdmDatabaseSchema = cdmDatabaseSchema,
                                                            cohortDatabaseSchema = cdmDatabaseSchema,
                                                            cohortTable = cohortTable,
                                                            tempEmulationSchema = NULL,
-                                                           outputFolder = getwd()), NA)
+                                                          outputFolder = outputFolder), NA)
 })
 
 
