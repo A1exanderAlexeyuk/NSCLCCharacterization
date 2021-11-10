@@ -4,17 +4,18 @@ WITH tab       AS (
                          t.cohort_start_date,
                          coalesce(min(o.cohort_start_date), max(t.cohort_end_date)) AS event_date,
                          CASE WHEN min(o.cohort_start_date) IS NULL THEN 0 ELSE 1 END AS event
-                  FROM @cohort_database_schema.@cohort_table t
-                  LEFT JOIN @cohort_database_schema.@cohort_table o
+                  FROM @cohortDatabaseSchema.@cohortTable t
+                  LEFT JOIN @cohortDatabaseSchema.@cohortTable o
                       ON t.subject_id = o.subject_id
                           AND o.cohort_start_date >= t.cohort_start_date
                           AND o.cohort_start_date <= t.cohort_end_date
-                          AND o.cohort_definition_id = @outcome_id
-                  WHERE t.cohort_definition_id IN (@target_ids)
+                          AND o.cohort_definition_id = @outcomeId
+                  WHERE t.cohort_definition_id IN (@targetId)
                   GROUP BY t.cohort_definition_id, t.subject_id, t.cohort_start_date
                   ),
      init_data AS (
-                  SELECT cohort_definition_id, datediff(day, tab.cohort_start_date, tab.event_date) AS value
+                  SELECT cohort_definition_id, datediff(day,
+                  tab.cohort_start_date, tab.event_date) AS value
                   FROM tab
                   ),
 
@@ -49,9 +50,6 @@ WITH tab       AS (
                              END
                              ) OVER (PARTITION BY cohort_definition_id) AS q3
 
-
-
-
                   FROM details
 
                   )
@@ -65,7 +63,8 @@ SELECT
        ROUND (AVG(median),1) AS median,
        ROUND (AVG(q3),1) AS q3,
        ROUND (MAX(value),1) AS maximum
-       'TimeToTreatmentInitiation' AS analysis_name
+       'TimeToTreatmentInitiation' AS analysis_name,
+       '@databaseId' AS databaseId
 
 FROM quartiles
 GROUP BY 1;
