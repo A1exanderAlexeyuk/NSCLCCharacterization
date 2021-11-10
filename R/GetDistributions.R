@@ -35,8 +35,8 @@ getAtEventDistribution <- function(connection,
     cohortDatabaseSchema = cohortDatabaseSchema,
     cdmDatabaseSchema = cdmDatabaseSchema,
     cohortTable = cohortTable,
-    targetIds = targetIds,
-    analysisName = analysisName,
+    target_ids = targetIds,
+    analysis_name = analysisName,
     warnOnMissingParameters = FALSE
   )
   sql <- SqlRender::translate(sql, targetDialect = connection@dbms)

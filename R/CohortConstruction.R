@@ -95,7 +95,8 @@ instantiateCohortSet <- function(connectionDetails = NULL,
   }
   if (createCohortTable) {
     needToCreate <- TRUE
-    }
+  } else { needToCreate <- FALSE }
+
   if (needToCreate) {
     createCohortTable(
       connection = connection,

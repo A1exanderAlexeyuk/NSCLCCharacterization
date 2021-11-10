@@ -79,7 +79,7 @@ runCohortDiagnostics <- function(connection,
     # Remove any cohorts that are to be excluded
     cohorts <- cohorts[!(cohorts$cohortId %in% cohortIdsToExcludeFromExecution), ]
     targetCohortIds <- cohorts[cohorts$cohortType %in% cohortGroups, "cohortId"][[1]] #
-
+    outcomeCohortIds <- cohorts[cohorts$cohortType == "outcome", "cohortId"][[1]]
     # Start with the target cohorts
     ParallelLogger::logInfo("**********************************************************")
     ParallelLogger::logInfo("  ---- Creating target cohorts ---- ")
@@ -132,8 +132,8 @@ runCohortDiagnostics <- function(connection,
                                           cohortDatabaseSchema = cohortDatabaseSchema,
                                           cohortTable = cohortTable,
                                           cohortIds = c(101, 102, 103),
-                                          exportFolder ="C:/Users/Alex/D/projects/NSCLCCharacterization/diagnostics/diagnosticsExport",
-                                          #exportFolder = file.path(outputFolder, "diagnosticsExport"),
+                                          inclusionStatisticsFolder = outputFolder,
+                                          exportFolder = file.path(outputFolder, "diagnosticsExport"),
                                           databaseId = databaseId,
                                           databaseName = databaseName,
                                           databaseDescription = databaseDescription,

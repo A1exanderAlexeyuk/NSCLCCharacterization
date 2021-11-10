@@ -10,7 +10,6 @@ runStudy <- function(connectionDetails,
                      featureSummaryTable = "cohort_smry",
                      cohortIdsToExcludeFromExecution = c(),
                      cohortIdsToExcludeFromResultsExport = NULL,
-
                      regimenIngredientsTable = regimenIngredientsTable,
                      createRegimenStats = TRUE,
                      exportFolder,
@@ -48,7 +47,7 @@ runStudy <- function(connectionDetails,
   }
   targetIdsTreatmentIndex <- c(101, 102, 103)
   # Instantiate cohorts -----------------------------------------------------------------------
-  cohorts <- getCohortsToCreate()
+  #cohorts <- getCohortsToCreate()
   # Remove any cohorts that are to be excluded
   #cohorts <- cohorts[!(cohorts$cohortId %in% cohortIdsToExcludeFromExecution), ]
   outcomeCohortIds <- cohorts[cohorts$cohortType == "outcome", "cohortId"][[1]]
@@ -194,7 +193,7 @@ if(createRegimenStats){
     targetIds = targetIdsFormatted
   )
 
-
+  metricsDistribution <- data.frame()
   DistribAnalyses <- c(
     "AgeAtIndex",
     "CharlsonAtIndex",
@@ -202,22 +201,20 @@ if(createRegimenStats){
     "PDLAtIndex",
     "PlateletToLymphocyteRatioAtIndex"
   )
+  for(analysis in DistribAnalyses){
 
-  metricsDistribution <- data.frame()
-
-  result <- getAtEventDistribution(
-    connection = connection,
-    cohortDatabaseSchema = cohortDatabaseSchema,
-    cdmDatabaseSchema = cdmDatabaseSchema,
-    cohortTable = cohortStagingTable,
-    targetIds = targetIds,
-    databaseId = databaseId,
-    packageName = getThisPackageName(),
-    analysisName <- analysis
-  )
-
-  metricsDistribution <- rbind(metricsDistribution, result)
-
+    result <- getAtEventDistribution(
+      connection = connection,
+      cohortDatabaseSchema = cohortDatabaseSchema,
+      cdmDatabaseSchema = cdmDatabaseSchema,
+      cohortTable = cohortStagingTable,
+      targetIds = targetIds,
+      databaseId = databaseId,
+      packageName = getThisPackageName(),
+      analysisName = analysis
+    )
+    metricsDistribution<- rbind(metricsDistribution, result)
+  }
 
 
 
@@ -437,34 +434,5 @@ enforceMinCellValue <- function(data, fieldName, minValues, silent = FALSE) {
     data[toCensor, fieldName] <- -minValues[toCensor]
   }
   return(data)
-}
-
-getCohortCounts <- function(connectionDetails = NULL,
-                            connection = NULL,
-                            cohortDatabaseSchema,
-                            cohortTable = "cohort",
-                            cohortIds = c()) {
-  start <- Sys.time()
-
-  if (is.null(connection)) {
-    connection <- DatabaseConnector::connect(connectionDetails)
-    on.exit(DatabaseConnector::disconnect(connection))
-  }
-  sql <- SqlRender::loadRenderTranslateSql(
-    sqlFilename = "CohortCounts.sql",
-    packageName = getThisPackageName(),
-    dbms = connection@dbms,
-    cohort_database_schema = cohortDatabaseSchema,
-    cohort_table = cohortTable,
-    cohort_ids = cohortIds
-  )
-  counts <- DatabaseConnector::querySql(connection, sql, snakeCaseToCamelCase = TRUE)
-  delta <- Sys.time() - start
-  ParallelLogger::logInfo(paste(
-    "Counting cohorts took",
-    signif(delta, 3),
-    attr(delta, "units")
-  ))
-  return(counts)
 }
 

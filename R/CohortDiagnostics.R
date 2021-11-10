@@ -16,7 +16,7 @@
 #'   # CohortGroupsDiagnostics.csv
 #'   cohortGroups <- getCohortGroupsForDiagnostics()
 #'   cohortGroupsExist <- cohortGroupNames %in% cohortGroups$cohortGroup
-#'   if (!all(cohortGroupsExist)) {
+#'  if (!all(cohortGroupsExist)) {
 #'     ParallelLogger::logError(paste(
 #'       "Invalid cohort group name. Must be one of:",
 #'       paste(getCohortGroupNamesForDiagnostics(), collapse = ", ")
