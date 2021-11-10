@@ -1,6 +1,6 @@
 #' @export
-runStudy <- function(connectionDetails = NULL,
-                     connection = NULL,
+runStudy <- function(connectionDetails,
+                     connection,
                      cdmDatabaseSchema,
                      tempEmulationSchema = NULL,
                      oracleDatabaseSchema = NULL,
@@ -10,7 +10,7 @@ runStudy <- function(connectionDetails = NULL,
                      featureSummaryTable = "cohort_smry",
                      cohortIdsToExcludeFromExecution = c(),
                      cohortIdsToExcludeFromResultsExport = NULL,
-                     cohortGroups = getUserSelectableCohortGroups(),
+
                      regimenIngredientsTable = regimenIngredientsTable,
                      createRegimenStats = TRUE,
                      exportFolder,
@@ -47,32 +47,12 @@ runStudy <- function(connectionDetails = NULL,
     connection <- DatabaseConnector::connect(connectionDetails)
     on.exit(DatabaseConnector::disconnect(connection))
   }
-  #targetIdsTreatmentIndex <- list(101, 102, 103)
+  targetIdsTreatmentIndex <- c(101, 102, 103)
   # Instantiate cohorts -----------------------------------------------------------------------
   cohorts <- getCohortsToCreate()
   # Remove any cohorts that are to be excluded
   cohorts <- cohorts[!(cohorts$cohortId %in% cohortIdsToExcludeFromExecution), ]
-  targetCohortIds <- cohorts[cohorts$cohortType %in% cohortGroups, "cohortId"][[1]] # ! should use first 3!
   outcomeCohortIds <- cohorts[cohorts$cohortType == "outcome", "cohortId"][[1]]
-
-  # Start with the target cohorts
-  ParallelLogger::logInfo("**********************************************************")
-  ParallelLogger::logInfo("  ---- Creating target cohorts ---- ")
-  ParallelLogger::logInfo("**********************************************************")
-  instantiateCohortSet(
-    connectionDetails = connectionDetails,
-    connection = connection,
-    cdmDatabaseSchema = cdmDatabaseSchema,
-    oracleTempSchema = oracleTempSchema,
-    cohortDatabaseSchema = cohortDatabaseSchema,
-    cohortTable = cohortStagingTable,
-    cohortIds = targetCohortIds,
-    minCellCount = minCellCount,
-    createCohortTable = TRUE,
-    generateInclusionStats = FALSE,
-    inclusionStatisticsFolder = exportFolder
-  )
-
   # Create the outcome cohorts
   ParallelLogger::logInfo("**********************************************************")
   ParallelLogger::logInfo(" ---- Creating outcome cohorts ---- ")
@@ -81,7 +61,7 @@ runStudy <- function(connectionDetails = NULL,
     connectionDetails = connectionDetails,
     connection = connection,
     cdmDatabaseSchema = cdmDatabaseSchema,
-    oracleTempSchema = oracleTempSchema,
+    tempEmulationSchema = tempEmulationSchema,
     cohortDatabaseSchema = cohortDatabaseSchema,
     cohortTable = cohortStagingTable,
     cohortIds = outcomeCohortIds,
@@ -90,44 +70,6 @@ runStudy <- function(connectionDetails = NULL,
     generateInclusionStats = FALSE,
     inclusionStatisticsFolder = exportFolder
   )
-
-
-  # Copy and censor cohorts to the final table
-  ParallelLogger::logInfo("**********************************************************")
-  ParallelLogger::logInfo(" ---- Copy cohorts to main table ---- ")
-  ParallelLogger::logInfo("**********************************************************")
-  copyAndCensorCohorts(
-    connection = connection,
-    cohortDatabaseSchema = cohortDatabaseSchema,
-    cohortStagingTable = cohortStagingTable,
-    cohortTable = cohortTable,
-    minCellCount = minCellCount,
-    targetIds = targetCohortIds,
-    oracleTempSchema = oracleTempSchema
-  )
-
-
-
-  # Counting staging cohorts ---------------------------------------------------------------
-  ParallelLogger::logInfo("Counting staging cohorts")
-  counts <- getCohortCounts(
-    connection = connection,
-    cohortDatabaseSchema = cohortDatabaseSchema,
-    cohortTable = cohortStagingTable
-  )
-  if (nrow(counts) > 0) {
-    counts$databaseId <- databaseId
-    counts <- enforceMinCellValue(counts, "cohortEntries", minCellCount)
-    counts <- enforceMinCellValue(counts, "cohortSubjects", minCellCount)
-  }
-  allStudyCohorts <- getAllStudyCohorts()
-  counts <- dplyr::left_join(x = allStudyCohorts, y = counts, by = "cohortId")
-  writeToCsv(counts, file.path(exportFolder, "cohort_staging_count.csv"),
-    cohortId = counts$cohortId
-  )
-
-
-
 
   # Generate  regimen stats table -----------------------------------------------------------------
 if(createRegimenStats){
@@ -324,36 +266,6 @@ if(createRegimenStats){
   cohortsForExport <- loadCohortsForExportFromPackage(cohortIds = counts$cohortId)
   writeToCsv(cohortsForExport, file.path(exportFolder, "cohort.csv"))
 
-  # Cohort characterization ---------------------------------------------------------------
-  runCohortCharacterization <- function() {
-    data <- getCohortCharacteristics(
-      connection = connection,
-      cdmDatabaseSchema = cdmDatabaseSchema,
-      oracleTempSchema = oracleTempSchema,
-      cohortDatabaseSchema = cohortDatabaseSchema,
-      cohortTable = cohortTable,
-      cohortId = targetIdsTreatmentIndex,
-      covariateSettings = FeatureExtraction::createDefaultCovariateSettings(
-        includedCovariateConceptIds = getCovariatesToInclude(),
-        addDescendantsToInclude = TRUE,
-        excludedCovariateConceptIds = 4162276, # melanoma
-        addDescendantsToExclude = TRUE
-      )
-    )
-    if (nrow(data) > 0) {
-      data$cohortId <- cohortId
-    }
-
-    return(data)
-  }
-
-  data <- runCohortCharacterization()
-  covariates <- formatCovariates(data)
-  writeToCsv(covariates, file.path(exportFolder, "covariate.csv"))
-  data <- formatCovariateValues(data, counts, minCellCount, databaseId)
-  writeToCsv(data, file.path(exportFolder, "covariate_value.csv"))
-
-
   # Format results -----------------------------------------------------------------------------------
   ParallelLogger::logInfo("********************************************************************************************")
   ParallelLogger::logInfo("Formatting Results")
@@ -428,10 +340,10 @@ getMinimumSubjectCountForCharacterization <- function() {
   return(140)
 }
 
-getVocabularyInfo <- function(connection, cdmDatabaseSchema, oracleTempSchema) {
+getVocabularyInfo <- function(connection, cdmDatabaseSchema, tempEmulationSchema) {
   sql <- "SELECT vocabulary_version FROM @cdmDatabaseSchema.vocabulary WHERE vocabulary_id = 'None';"
   sql <- SqlRender::render(sql, cdmDatabaseSchema = cdmDatabaseSchema)
-  sql <- SqlRender::translate(sql, targetDialect = attr(connection, "dbms"), oracleTempSchema = oracleTempSchema)
+  sql <- SqlRender::translate(sql, targetDialect = attr(connection, "dbms"), tempEmulationSchema = tempEmulationSchema)
   vocabInfo <- DatabaseConnector::querySql(connection, sql)
   return(vocabInfo[[1]])
 }

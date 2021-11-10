@@ -2,6 +2,18 @@ getThisPackageName <- function() {
   return("NSCLCCharacterization")
 }
 
+
+readCsv <- function(resourceFile) {
+  packageName <- getThisPackageName()
+  pathToCsv <- system.file(resourceFile, package = packageName, mustWork = TRUE)
+  fileContents <- readr::read_csv(pathToCsv, col_types = readr::cols())
+  return(fileContents)
+}
+
+getCohortGroupNamesForDiagnostics <- function() {
+  return(getCohortGroupsForDiagnostics()$cohortGroup)
+}
+
 getPathToTreatmentStats <- function() {
   return("inst/sql/sql_server/TreatmentAnalysis")
 }

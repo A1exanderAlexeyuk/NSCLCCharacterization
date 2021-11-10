@@ -310,7 +310,7 @@ processInclusionStats <- function(inclusion,
 instantiateCohortSet <- function(connectionDetails = NULL,
                                  connection = NULL,
                                  cdmDatabaseSchema,
-                                 oracleTempSchema = NULL,
+                                 tempEmulationSchema = NULL,
                                  cohortDatabaseSchema = cdmDatabaseSchema,
                                  cohortTable = "cohort",
                                  cohortIds = NULL,
@@ -353,7 +353,7 @@ instantiateCohortSet <- function(connectionDetails = NULL,
   cohorts <- loadCohortsFromPackage(cohortIds = cohortIds)
 
   if (generateInclusionStats) {
-    createTempInclusionStatsTables(connection, oracleTempSchema, cohorts)
+    createTempInclusionStatsTables(connection, tempEmulationSchema, cohorts)
   }
 
   instantiatedCohortIds <- c()
@@ -393,7 +393,7 @@ instantiateCohortSet <- function(connectionDetails = NULL,
       }
       sql <- SqlRender::translate(sql,
         targetDialect = connectionDetails$dbms,
-        oracleTempSchema = oracleTempSchema
+        tempEmulationSchema = tempEmulationSchema
       )
       DatabaseConnector::executeSql(connection, sql)
       instantiatedCohortIds <- c(instantiatedCohortIds, cohorts$cohortId[i])
@@ -403,7 +403,7 @@ instantiateCohortSet <- function(connectionDetails = NULL,
   if (generateInclusionStats) {
     saveAndDropTempInclusionStatsTables(
       connection = connection,
-      oracleTempSchema = oracleTempSchema,
+      tempEmulationSchema = tempEmulationSchema,
       inclusionStatisticsFolder = inclusionStatisticsFolder,
       cohortIds = instantiatedCohortIds
     )
@@ -415,11 +415,11 @@ instantiateCohortSet <- function(connectionDetails = NULL,
 
 
 
-createTempInclusionStatsTables <- function(connection, oracleTempSchema, cohorts) {
+createTempInclusionStatsTables <- function(connection, tempEmulationSchema, cohorts) {
   ParallelLogger::logInfo("Creating temporary inclusion statistics tables")
   pathToSql <- system.file("inclusionStatsTables.sql", package = "ROhdsiWebApi", mustWork = TRUE)
   sql <- SqlRender::readSql(pathToSql)
-  sql <- SqlRender::translate(sql, targetDialect = connection@dbms, oracleTempSchema = oracleTempSchema)
+  sql <- SqlRender::translate(sql, targetDialect = connection@dbms, tempEmulationSchema = tempEmulationSchema)
   DatabaseConnector::executeSql(connection, sql)
 
   inclusionRules <- data.frame()
@@ -454,12 +454,12 @@ createTempInclusionStatsTables <- function(connection, oracleTempSchema, cohorts
     dropTableIfExists = FALSE,
     createTable = FALSE,
     tempTable = TRUE,
-    oracleTempSchema = oracleTempSchema
+    tempEmulationSchema = tempEmulationSchema
   )
 }
 
 saveAndDropTempInclusionStatsTables <- function(connection,
-                                                oracleTempSchema,
+                                                tempEmulationSchema,
                                                 inclusionStatisticsFolder,
                                                 cohortIds) {
   fetchStats <- function(table, fileName) {
@@ -468,7 +468,7 @@ saveAndDropTempInclusionStatsTables <- function(connection,
     data <- DatabaseConnector::renderTranslateQuerySql(
       sql = sql,
       connection = connection,
-      oracleTempSchema = oracleTempSchema,
+      tempEmulationSchema = tempEmulationSchema,
       snakeCaseToCamelCase = TRUE,
       table = table
     )
@@ -496,7 +496,7 @@ saveAndDropTempInclusionStatsTables <- function(connection,
     sql = sql,
     progressBar = FALSE,
     reportOverallTime = FALSE,
-    oracleTempSchema = oracleTempSchema
+    tempEmulationSchema = tempEmulationSchema
   )
 }
 
@@ -506,14 +506,14 @@ copyAndCensorCohorts <- function(connection,
                                  cohortTable,
                                  targetIds,
                                  minCellCount,
-                                 oracleTempSchema) {
+                                 tempEmulationSchema) {
   packageName <- getThisPackageName()
 
   sql <- SqlRender::loadRenderTranslateSql(
     dbms = attr(connection, "dbms"),
     sqlFilename = "CopyAndCensorCohorts.sql",
     packageName = packageName,
-    oracleTempSchema = oracleTempSchema,
+    tempEmulationSchema = tempEmulationSchema,
     warnOnMissingParameters = TRUE,
     cohort_database_schema = cohortDatabaseSchema,
     cohort_staging_table = cohortStagingTable,

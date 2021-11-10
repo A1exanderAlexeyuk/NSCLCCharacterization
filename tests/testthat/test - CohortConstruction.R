@@ -14,7 +14,9 @@ packageName <- "NSCLCCharacterization"
 #                                              password = Sys.getenv("testuser"),
 #                                              port = Sys.getenv("testport"))
 # conn <- connect(connectionDetails=connectionDetails)
+#Test passed
 test_that("Create Cohort Table", {
+
   connectionDetails <- createConnectionDetails(
     dbms = "postgresql",
     server = Sys.getenv("testserver"),
@@ -23,10 +25,10 @@ test_that("Create Cohort Table", {
     port = Sys.getenv("testport")
   )
   conn <- connect(connectionDetails = connectionDetails)
-  expect_error(renderTranslateQuerySql(
+  expect_error(renderTranslateExecuteSql(
     connection = conn, sql = "INSERT INTO
                                        @cohortDatabaseSchema.@cohortTable
-                                       VALUES (1, 1, 1, '2000-01-01', '2000-01-01'",
+                                       VALUES (1, 1, '2000-01-01', '2000-01-01')",
     cohortDatabaseSchema = cohortDatabaseSchema,
     cohortTable = cohortTable
   ))
@@ -44,10 +46,10 @@ test_that("Create Cohort Table", {
     cohortSummaryStatsTable = paste0(cohortTable, "_summary_stats")
   )
 
-  expect_error(renderTranslateQuerySql(
+  expect_error(renderTranslateExecuteSql(
     connection = conn, sql = "INSERT INTO
                                        @cohortDatabaseSchema.@cohortTable
-                                       VALUES (1, 1, 1, '2000-01-01', '2000-01-01'",
+                                       VALUES (1, 1, '2000-01-01', '2000-01-01')",
     cohortDatabaseSchema = cohortDatabaseSchema,
     cohortTable = cohortTable
   ), NA)
@@ -58,19 +60,7 @@ test_that("Create Cohort Table", {
     cohortDatabaseSchema = cohortDatabaseSchema,
     cohortTable = cohortTable
   ), "list")
-
-  renderTranslateQuerySql(
-    connection = conn, sql = "DROP TABLE
-                                       @cohortDatabaseSchema.@cohortTable",
-    cohortDatabaseSchema = cohortDatabaseSchema,
-    cohortTable = cohortTable
-  )
-
-  expect_error(renderTranslateQuerySql(
-    connection = conn, sql = "INSERT INTO
-                                       @cohortDatabaseSchema.@cohortTable
-                                       VALUES (1, 1, 1, '2000-01-01', '2000-01-01'",
-    cohortDatabaseSchema = cohortDatabaseSchema,
-    cohortTable = cohortTable
-  ))
 })
+
+
+

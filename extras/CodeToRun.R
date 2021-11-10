@@ -109,6 +109,7 @@ cohortDatabaseSchema <- Sys.getenv("COHORT_SCHEMA")
 cohortTable <- paste0("NSCLC_", databaseId)
 cohortStagingTable <- paste0(cohortTable, "_stg")
 featureSummaryTable <- paste0(cohortTable, "_smry")
+databaseName <- 'db_name'
 minCellCount <- 5
 cohortIdsToExcludeFromExecution <- c()
 cohortIdsToExcludeFromResultsExport <- NULL
@@ -118,45 +119,80 @@ keyFileName <- "your-home-folder-here/.ssh/study-data-site-NSCLC"
 userName <- "study-data-site-NSCLC"
 
 # Run cohort diagnostics -----------------------------------
-runCohortDiagnostics(connectionDetails = connectionDetails,
-                     cdmDatabaseSchema = cdmDatabaseSchema,
-                     cohortDatabaseSchema = cohortDatabaseSchema,
-                     cohortStagingTable = cohortStagingTable,
-                     tempEmulationSchema = tempEmulationSchema,
-                     cohortIdsToExcludeFromExecution = cohortIdsToExcludeFromExecution,
-                     exportFolder = outputFolder,
-                     databaseId = databaseId,
-                     databaseName = databaseName,
-                     databaseDescription = databaseDescription,
-                     minCellCount = minCellCount)
+runCohortDiagnostics <- function(connectionDetails = connectionDetails,
+                                 cdmDatabaseSchema = cdmDatabaseSchema,
+                                 cohortDatabaseSchema = cdmDatabaseSchema,
+                                 cohortTable = cohortTable,
+                                 tempEmulationSchema = tempEmulationSchema,
+                                 outputFolder = outputFolder,
+                                 databaseId = databaseId,
+                                 databaseName = databaseName,
+                                 databaseDescription = "Unknown",
+                                 cohortStagingTable = cohortStagingTable)
 
 
-# CohortDiagnostics::launchDiagnosticsExplorer(file.path(outputFolder, "diagnostics", "target"))
+# To view the results:
+# Optional: if there are results zip files from multiple sites in a folder, this merges them, which will speed up starting the viewer:
+CohortDiagnostics::preMergeDiagnosticsFiles(file.path(outputFolder, "diagnosticsExport"))
+
+# Use this to view the results. Multiple zip files can be in the same folder. If the files were pre-merged, this is automatically detected:
+CohortDiagnostics::launchDiagnosticsExplorer(file.path(outputFolder, "diagnosticsExport"))
+
+
+# To explore a specific cohort in the local database, viewing patient profiles:
+CohortDiagnostics::launchCohortExplorer(connectionDetails = connectionDetails,
+                                        cdmDatabaseSchema = cdmDatabaseSchema,
+                                        cohortDatabaseSchema = cohortDatabaseSchema,
+                                        cohortTable = cohortTable,
+                                        cohortId = 123)
 
 # When finished with reviewing the diagnostics, use the next command
 # to upload the diagnostic results
 uploadDiagnosticsResults(outputFolder, keyFileName, userName)
 
+devtools::install_github("A1exanderAlexeyuk/OncologyRegimenFinder")
+library(OncologyRegimenFinder)
+writeDatabaseSchema <- "your_schema"
+cdmDatabaseSchema <- "cdm_schema"
+vocabularyTable <- "vocabularyTable"
+cohortTable <- "cohortTable"
+regimenTable <- "regimenTable"
+regimenIngredientTable <- "regimen_ingredient_table"
+dateLagInput <- 30
+OncologyRegimenFinder::createRegimens(connectionDetails = connectionDetails,
+                                      cdmDatabaseSchema = cdmDatabaseSchema,
+                                      writeDatabaseSchema = writeDatabaseSchema,
+                                      cohortTable = cohortTable,
+                                      regimenTable = regimenTable,
+                                      rawEventTable = rawEventTable,
+                                      regimenIngredientTable = regimenIngredientTable,
+                                      #vocabularyTable = vocabularyTable,
+                                      drugClassificationIdInput = 21601387, #antineoplastic
+                                      cancerConceptId = 4115276,
+                                      dateLagInput = dateLagInput,
+                                      # regimenRepeats = 5,
+                                      generateVocabTable = FALSE,
+                                      sampleSize = 999999999999,
+                                      generateRawEvents = FALSE)
 
 # Use this to run the study. The results will be stored in a zip file called
 # 'Results_<databaseId>.zip in the outputFolder.
 runStudy(connectionDetails = connectionDetails,
+         connection = connection,
          cdmDatabaseSchema = cdmDatabaseSchema,
+         tempEmulationSchema = tempEmulationSchema,
          cohortDatabaseSchema = cohortDatabaseSchema,
          cohortStagingTable = cohortStagingTable,
          cohortTable = cohortTable,
          featureSummaryTable = featureSummaryTable,
-         oracleTempSchema = cohortDatabaseSchema,
-         regimenIngredientsTable = NULL,
-         createRegimenStats = FALSE,
+         regimenIngredientsTable = regimenIngredientTable,
+         createRegimenStats = TRUE,
          gapBetweenTreatment = gapBetweenTreatment,
-         exportFolder = outputFolder,
+         exportFolder = exportFolder,
          databaseId = databaseId,
-         databaseName = databaseName,
-         databaseDescription = databaseDescription,
-         cohortIdsToExcludeFromExecution = cohortIdsToExcludeFromExecution,
-         cohortIdsToExcludeFromResultsExport = cohortIdsToExcludeFromResultsExport,
-         minCellCount = minCellCount)
+         databaseName = databaseId,
+         databaseDescription = "",
+         minCellCount = 5)
 
 
 # Use the next set of commands to compress results
