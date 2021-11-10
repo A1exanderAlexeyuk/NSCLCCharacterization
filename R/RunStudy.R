@@ -16,8 +16,7 @@ runStudy <- function(connectionDetails,
                      exportFolder,
                      databaseId,
                      databaseName = databaseId,
-                     databaseDescription = "",
-                     minCellCount = 5) {
+                     databaseDescription = "") {
   start <- Sys.time()
 
   if (!file.exists(exportFolder)) {
@@ -51,7 +50,7 @@ runStudy <- function(connectionDetails,
   # Instantiate cohorts -----------------------------------------------------------------------
   cohorts <- getCohortsToCreate()
   # Remove any cohorts that are to be excluded
-  cohorts <- cohorts[!(cohorts$cohortId %in% cohortIdsToExcludeFromExecution), ]
+  #cohorts <- cohorts[!(cohorts$cohortId %in% cohortIdsToExcludeFromExecution), ]
   outcomeCohortIds <- cohorts[cohorts$cohortType == "outcome", "cohortId"][[1]]
   # Create the outcome cohorts
   ParallelLogger::logInfo("**********************************************************")
@@ -65,10 +64,7 @@ runStudy <- function(connectionDetails,
     cohortDatabaseSchema = cohortDatabaseSchema,
     cohortTable = cohortStagingTable,
     cohortIds = outcomeCohortIds,
-    minCellCount = minCellCount,
-    createCohortTable = FALSE,
-    generateInclusionStats = FALSE,
-    inclusionStatisticsFolder = exportFolder
+    createCohortTable = FALSE
   )
 
   # Generate  regimen stats table -----------------------------------------------------------------
@@ -244,28 +240,6 @@ if(createRegimenStats){
   )
 
 
-  # Counting cohorts -----------------------------------------------------------------------
-  ParallelLogger::logInfo("Counting cohorts")
-  counts <- getCohortCounts(
-    connection = connection,
-    cohortDatabaseSchema = cohortDatabaseSchema,
-    cohortTable = cohortTable
-  )
-  if (nrow(counts) > 0) {
-    counts$databaseId <- databaseId
-    counts <- enforceMinCellValue(counts, "cohortEntries", minCellCount)
-    counts <- enforceMinCellValue(counts, "cohortSubjects", minCellCount)
-  }
-  writeToCsv(counts, file.path(exportFolder, "cohort_count.csv"), cohortId = counts$cohortId)
-
-  # Read in the cohort counts
-  counts <- readr::read_csv(file.path(exportFolder, "cohort_count.csv"), col_types = readr::cols())
-  colnames(counts) <- SqlRender::snakeCaseToCamelCase(colnames(counts))
-
-  # Export the cohorts from the study
-  cohortsForExport <- loadCohortsForExportFromPackage(cohortIds = counts$cohortId)
-  writeToCsv(cohortsForExport, file.path(exportFolder, "cohort.csv"))
-
   # Format results -----------------------------------------------------------------------------------
   ParallelLogger::logInfo("********************************************************************************************")
   ParallelLogger::logInfo("Formatting Results")
@@ -369,20 +343,6 @@ formatCovariates <- function(data) {
   return(covariates)
 }
 
-formatCovariateValues <- function(data, counts, minCellCount, databaseId) {
-  data$covariateName <- NULL
-  data$analysisId <- NULL
-  if (nrow(data) > 0) {
-    data$databaseId <- databaseId
-    data <- merge(data, counts[, c("cohortId", "cohortEntries")])
-    data <- enforceMinCellValue(data, "mean", minCellCount / data$cohortEntries)
-    data$sd[data$mean < 0] <- NA
-    data$cohortEntries <- NULL
-    data$mean <- round(data$mean, 3)
-    data$sd <- round(data$sd, 3)
-  }
-  return(data)
-}
 
 loadCohortsFromPackage <- function(cohortIds) {
   packageName <- getThisPackageName()

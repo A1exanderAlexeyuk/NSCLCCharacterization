@@ -34,8 +34,6 @@
 #' @param runIncidenceRates      Generate and export the cohort incidence rates?
 #' @param runCohortOverlap            Generate and export the cohort overlap?
 #' @param runCohortCharacterization   Generate and export the cohort characterization?
-#' @param minCellCount         The minimum number of subjects contributing to a count before it can be included
-#'                             in packaged results.
 #'
 #' @export
 runCohortDiagnostics <- function(connection,
@@ -65,8 +63,7 @@ runCohortDiagnostics <- function(connection,
                                  ),
                                  runCohortCharacterization = TRUE,
                                  cohortIdsToExcludeFromExecution = NULL,
-                                 cohortGroups = getUserSelectableCohortGroups(),
-                                 minCellCount = 5) {
+                                 cohortGroups = getUserSelectableCohortGroups()) {
   if (!file.exists(outputFolder))
     dir.create(outputFolder, recursive = TRUE)
 
@@ -95,12 +92,22 @@ runCohortDiagnostics <- function(connection,
       cohortDatabaseSchema = cohortDatabaseSchema,
       cohortTable = cohortStagingTable,
       cohortIds = targetCohortIds,
-      minCellCount = minCellCount,
-      createCohortTable = TRUE,
-      generateInclusionStats = FALSE,
-      inclusionStatisticsFolder = exportFolder
+      createCohortTable = TRUE
     )
-
+    # Create the outcome cohorts
+    ParallelLogger::logInfo("**********************************************************")
+    ParallelLogger::logInfo(" ---- Creating outcome cohorts ---- ")
+    ParallelLogger::logInfo("**********************************************************")
+    instantiateCohortSet(
+      connectionDetails = connectionDetails,
+      connection = connection,
+      cdmDatabaseSchema = cdmDatabaseSchema,
+      tempEmulationSchema = tempEmulationSchema,
+      cohortDatabaseSchema = cohortDatabaseSchema,
+      cohortTable = cohortStagingTable,
+      cohortIds = outcomeCohortIds,
+      createCohortTable = FALSE
+    )
 
 
     # Copy and censor cohorts to the final table
@@ -112,9 +119,8 @@ runCohortDiagnostics <- function(connection,
       cohortDatabaseSchema = cohortDatabaseSchema,
       cohortStagingTable = cohortStagingTable,
       cohortTable = cohortTable,
-      minCellCount = minCellCount,
       targetIds = targetCohortIds,
-      oracleTempSchema = oracleTempSchema
+      tempEmulationSchema = tempEmulationSchema
     )
   }
 
@@ -125,8 +131,9 @@ runCohortDiagnostics <- function(connection,
                                           tempEmulationSchema = tempEmulationSchema,
                                           cohortDatabaseSchema = cohortDatabaseSchema,
                                           cohortTable = cohortTable,
-                                          inclusionStatisticsFolder = outputFolder,
-                                          exportFolder = file.path(outputFolder, "diagnosticsExport"),
+                                          cohortIds = c(101, 102, 103),
+                                          exportFolder ="C:/Users/Alex/D/projects/NSCLCCharacterization/diagnostics/diagnosticsExport",
+                                          #exportFolder = file.path(outputFolder, "diagnosticsExport"),
                                           databaseId = databaseId,
                                           databaseName = databaseName,
                                           databaseDescription = databaseDescription,
@@ -137,8 +144,8 @@ runCohortDiagnostics <- function(connection,
                                           runBreakdownIndexEvents = runBreakdownIndexEvents,
                                           runIncidenceRate = runIncidenceRates,
                                           runCohortOverlap = runCohortOverlap,
-                                          runCohortCharacterization = runCohortCharacterization,
-                                          minCellCount = minCellCount)
+                                          runCohortCharacterization = runCohortCharacterization
+                                          )
 }
 
 
