@@ -10,9 +10,9 @@ WITH tab       AS (
                       ON cohort.subject_id = m.person_id
                           AND m.measurement_concept_id IN (718584, 718585,718589,
                           718588, 718586, 718587)
-                          )
                   WHERE cohort_definition_id IN (@target_ids)
                     AND abs(datediff(day, cohort.cohort_start_date, m.measurement_date)) <= 30
+
                   ),
      init_data AS (
                   SELECT t1.cohort_definition_id,

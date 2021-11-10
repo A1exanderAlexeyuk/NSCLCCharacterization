@@ -9,10 +9,9 @@ WITH tab       AS (
                   JOIN @cdmDatabaseSchema.measurement m
                       ON cohort.subject_id = m.person_id
                           AND m.measurement_concept_id IN (4097616)
-                          )
                   WHERE cohort_definition_id IN (@target_ids)
-                    AND abs(datediff(day, cohort.cohort_start_date, m.measurement_date)) <= 30
-                  ),
+                    AND abs(datediff(day, cohort.cohort_start_date, m.measurement_date)) <= 30 ),
+
      init_data AS (
                   SELECT t1.cohort_definition_id,
                          value_as_number AS value
