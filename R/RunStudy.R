@@ -45,27 +45,12 @@ runStudy <- function(connectionDetails,
     connection <- DatabaseConnector::connect(connectionDetails)
     on.exit(DatabaseConnector::disconnect(connection))
   }
-  targetIdsTreatmentIndex <- c(101, 102, 103)
+  cohortIdsConditionIndex <- getCohortsToCreate()$cohortId[4:6]
+  targetIdsTreatmentIndex <- getCohortsToCreate()$cohortId[1:3]
   # Instantiate cohorts -----------------------------------------------------------------------
   #cohorts <- getCohortsToCreate()
   # Remove any cohorts that are to be excluded
   #cohorts <- cohorts[!(cohorts$cohortId %in% cohortIdsToExcludeFromExecution), ]
-  outcomeCohortIds <- cohorts[cohorts$cohortType == "outcome", "cohortId"][[1]]
-  # Create the outcome cohorts
-  ParallelLogger::logInfo("**********************************************************")
-  ParallelLogger::logInfo(" ---- Creating outcome cohorts ---- ")
-  ParallelLogger::logInfo("**********************************************************")
-  instantiateCohortSet(
-    connectionDetails = connectionDetails,
-    connection = connection,
-    cdmDatabaseSchema = cdmDatabaseSchema,
-    tempEmulationSchema = tempEmulationSchema,
-    cohortDatabaseSchema = cohortDatabaseSchema,
-    cohortTable = cohortStagingTable,
-    cohortIds = outcomeCohortIds,
-    createCohortTable = FALSE
-  )
-
   # Generate  regimen stats table -----------------------------------------------------------------
 if(createRegimenStats){
   if(!is.null(regimenIngredientsTable)){
@@ -134,7 +119,7 @@ if(createRegimenStats){
     connection = connection,
     cohortDatabaseSchema,
     cohortTable = cohortStagingTable,
-    targetIds = c(104, 105, 106), # condition index cohorts
+    targetIds = cohortIdsConditionIndex,
     outcomeId = outcomesTI,
     databaseId = databaseId
   )
