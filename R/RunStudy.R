@@ -15,7 +15,8 @@ runStudy <- function(connectionDetails,
                      exportFolder,
                      databaseId,
                      databaseName = databaseId,
-                     databaseDescription = "") {
+                     databaseDescription = "",
+                     gapBetweenTreatment = 120) {
   start <- Sys.time()
 
   if (!file.exists(exportFolder)) {
@@ -47,10 +48,7 @@ runStudy <- function(connectionDetails,
   }
   cohortIdsConditionIndex <- getCohortsToCreate()$cohortId[4:6]
   targetIdsTreatmentIndex <- getCohortsToCreate()$cohortId[1:3]
-  # Instantiate cohorts -----------------------------------------------------------------------
-  #cohorts <- getCohortsToCreate()
-  # Remove any cohorts that are to be excluded
-  #cohorts <- cohorts[!(cohorts$cohortId %in% cohortIdsToExcludeFromExecution), ]
+
   # Generate  regimen stats table -----------------------------------------------------------------
 if(createRegimenStats){
   if(!is.null(regimenIngredientsTable)){
@@ -61,7 +59,7 @@ if(createRegimenStats){
     cohortTable = cohortStagingTable,
     regimenStatsTable = regimenStatsTable,
     regimenIngredientsTable = regimenIngredientsTable,
-    gapBetweenTreatment = 120
+    gapBetweenTreatment = gapBetweenTreatment
   )
   }else{
     ParallelLogger::logWarn("Specify regimen ingredients table")
@@ -75,7 +73,6 @@ if(createRegimenStats){
   categorizedRegimens <- createCategorizedRegimensTable(
     connection = connection,
     cohortDatabaseSchema = cohortDatabaseSchema,
-    cohortTable = cohortStagingTable,
     regimenStatsTable = regimenStatsTable,
     targetIds = targetIdsTreatmentIndex
   )
@@ -118,7 +115,6 @@ if(createRegimenStats){
   timeToTI <- generateTimeToTreatmenInitiationStatistics(
     connection = connection,
     cohortDatabaseSchema,
-    cohortTable = cohortStagingTable,
     targetIds = cohortIdsConditionIndex,
     outcomeId = outcomesTI,
     databaseId = databaseId
@@ -133,7 +129,6 @@ if(createRegimenStats){
     connection = connection,
     cohortDatabaseSchema = cohortDatabaseSchema,
     regimenStatsTable = regimenStatsTable,
-    cohortTable = cohortStagingTable,
     targetIds = targetIdsTreatmentIndex,
     databaseId = databaseId
   )

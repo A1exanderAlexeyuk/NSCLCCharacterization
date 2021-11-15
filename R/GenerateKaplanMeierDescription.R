@@ -173,7 +173,7 @@ generateKaplanMeierDescriptionTFITTD <- function(connection,
           data, ~ survival::survfit(
             survival::Surv(
               timeToEvent, event
-            ) ~ event,
+            ) ~ 1,
             data = .
           )
         ))
@@ -206,7 +206,6 @@ generateKaplanMeierDescriptionTFITTD <- function(connection,
 #' @export
 generateTimeToTreatmenInitiationStatistics <- function(connection,
                                                        cohortDatabaseSchema,
-                                                       cohortTable,
                                                        targetIds,
                                                        outcomeId, # treatment initiation
                                                        databaseId) {
@@ -219,7 +218,6 @@ generateTimeToTreatmenInitiationStatistics <- function(connection,
     sqlRendered <- SqlRender::render(
       sql = sql,
       cohortDatabaseSchema = cohortDatabaseSchema,
-      cohortTable = cohortTable,
       outcomeId = outcomeId,
       targetId = targetId,
       databaseId = databaseId
