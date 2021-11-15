@@ -50,7 +50,6 @@ createRegimenStats <- function(connection,
 #' @export
 createCategorizedRegimensTable <- function(connection,
                                            cohortDatabaseSchema,
-                                           cohortTable,
                                            regimenStatsTable,
                                            targetIds) {
   sql <- SqlRender::readSql(file.path(
@@ -62,7 +61,7 @@ createCategorizedRegimensTable <- function(connection,
     sqlTmp <- SqlRender::render(
       sql = sql,
       cohortDatabaseSchema = cohortDatabaseSchema,
-      cohortTable = cohortTable,
+      regimenStatsTable = regimenStatsTable,
       targetIds = targetIds
     )
 
