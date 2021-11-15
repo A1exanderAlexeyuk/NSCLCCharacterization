@@ -101,8 +101,7 @@ databaseDescription <- "Testing"
 outputFolderPath <- getwd() # if needed, set up a different path for results
 
 # Details for connecting to the CDM and storing the results
-regimenIngredientsTable <- "name_of_your_regimen_stats_table" #sql db an output on OncologyRegimenFinder
-gapBetweenTreatment <- 120 # specify gap between lines what will be used as a difinition on TTD
+
 outputFolder <- normalizePath(file.path(outputFolderPath, databaseId))
 cdmDatabaseSchema <- Sys.getenv("CDM_SCHEMA")
 cohortDatabaseSchema <- Sys.getenv("COHORT_SCHEMA")
@@ -110,7 +109,6 @@ cohortTable <- paste0("NSCLC_", databaseId)
 cohortStagingTable <- paste0(cohortTable, "_stg")
 featureSummaryTable <- paste0(cohortTable, "_smry")
 databaseName <- 'db_name'
-minCellCount <- 5
 cohortIdsToExcludeFromExecution <- c()
 cohortIdsToExcludeFromResultsExport <- NULL
 
@@ -144,7 +142,7 @@ CohortDiagnostics::launchCohortExplorer(connectionDetails = connectionDetails,
                                         cdmDatabaseSchema = cdmDatabaseSchema,
                                         cohortDatabaseSchema = cohortDatabaseSchema,
                                         cohortTable = cohortTable,
-                                        cohortId = 123)
+                                        cohortId = 101)
 
 # When finished with reviewing the diagnostics, use the next command
 # to upload the diagnostic results
@@ -152,27 +150,29 @@ uploadDiagnosticsResults(outputFolder, keyFileName, userName)
 
 devtools::install_github("A1exanderAlexeyuk/OncologyRegimenFinder")
 library(OncologyRegimenFinder)
-writeDatabaseSchema <- "your_schema"
+writeDatabaseSchema <- "your_schema_to_write"
 cdmDatabaseSchema <- "cdm_schema"
-vocabularyTable <- "vocabularyTable"
-cohortTable <- "cohortTable"
-regimenTable <- "regimenTable"
-regimenIngredientTable <- "regimen_ingredient_table"
+vocabularyTable <- "vocabulary_table"
+cohortTable <- "cohort_table"
+regimenTable <- "regimen_table"
+regimenIngredientsTable <- "name_of_your_regimen_stats_table" #sql db an output on OncologyRegimenFinder
+gapBetweenTreatment <- 120 # specify gap between lines what will be used as a difinition on TTD
 dateLagInput <- 30
 OncologyRegimenFinder::createRegimens(connectionDetails = connectionDetails,
                                       cdmDatabaseSchema = cdmDatabaseSchema,
                                       writeDatabaseSchema = writeDatabaseSchema,
                                       cohortTable = cohortTable,
-                                      regimenTable = regimenTable,
                                       rawEventTable = rawEventTable,
+                                      regimenTable = regimenTable,
                                       regimenIngredientTable = regimenIngredientTable,
-                                      #vocabularyTable = vocabularyTable,
-                                      drugClassificationIdInput = 21601387, #antineoplastic
+                                      vocabularyTable = vocabularyTable,
+                                      addAntineoplasticAgents = TRUE,
+                                      addEndocrineTherapy = FALSE,
+                                      addImmunostimulants = FALSE,
+                                      addImmunosuppressants = FALSE,
                                       cancerConceptId = 4115276,
                                       dateLagInput = dateLagInput,
-                                      # regimenRepeats = 5,
                                       generateVocabTable = FALSE,
-                                      sampleSize = 999999999999,
                                       generateRawEvents = FALSE)
 
 # Use this to run the study. The results will be stored in a zip file called
@@ -191,8 +191,7 @@ runStudy(connectionDetails = connectionDetails,
          exportFolder = exportFolder,
          databaseId = databaseId,
          databaseName = databaseId,
-         databaseDescription = "",
-         minCellCount = 5)
+         databaseDescription = "")
 
 
 # Use the next set of commands to compress results
