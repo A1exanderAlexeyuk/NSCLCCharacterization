@@ -27,7 +27,7 @@ temp_0 as(
           coalesce(regimen_end_date, cohort_end_date,observation_period_end_date,
           death_date ) as  regimen_end_date,
           regimen, observation_period_end_date, death_date
-        	from regimen_stats_schema.rst2 ORDER BY 1,2,3,4
+        	from temp_ ORDER BY 1,2,3,4
 ),
 
 temp_t as (

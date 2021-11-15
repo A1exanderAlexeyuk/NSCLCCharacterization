@@ -6,6 +6,7 @@ WITH init_data AS (
                   Treatment_free_Interval as time_to_event
                   FROM @cohortDatabaseSchema.@regimenStatsTable
                   WHERE cohort_definition_id IN (@targetId)
+                  AND Treatment_free_Interval IS NOT NULL
                   )
 
                   SELECT ROW_NUMBER() OVER (PARTITION BY
