@@ -43,8 +43,9 @@ WITH cte AS (SELECT cohort_definition_id,
                           then 1 else 0 end) AS anti_VEGF_mAb
 
            FROM @cohortDatabaseSchema.@regimenStatsTable
+           WHERE cohort_definition_id IN (@targetIds)
            ORDER BY 1, 3, 2
-           WHERE cohort_definition_id IN (@targetIds))
+)
 
 SELECT cohort_definition_id,
        person_id,

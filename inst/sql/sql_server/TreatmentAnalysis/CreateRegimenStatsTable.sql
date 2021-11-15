@@ -23,70 +23,72 @@ with temp_ as (select DISTINCT c.cohort_definition_id, c.subject_id as person_id
 
 
 temp_0 as(
-        	select cohort_definition_id, person_id, cohort_start_date, regimen_start_date,
+        select  cohort_definition_id, person_id, cohort_start_date, regimen_start_date,
           coalesce(regimen_end_date, cohort_end_date,observation_period_end_date,
           death_date ) as  regimen_end_date,
           regimen, observation_period_end_date, death_date
-        	FROM temp_ ORDER BY 1,2,3,4
+        	from regimen_stats_schema.rst2 ORDER BY 1,2,3,4
 ),
 
-temp as (
-          select  cohort_definition_id, person_id, min(regimen_start_date) over
-          (PARTITION BY person_id, regimen, cohort_definition_id) as regimen_start_date,
-          max(regimen_end_date) over  (PARTITION BY person_id, regimen,cohort_definition_id) as regimen_end_date,
-                   regimen, observation_period_end_date, death_date, cohort_start_date
-          FROM temp_0 ORDER BY 1, 2, 3
-),
+temp_t as (
+          select  distinct cohort_definition_id, person_id,
+       			min(regimen_start_date) over
+                (PARTITION BY person_id, regimen, cohort_definition_id) as regimen_start_date,
+                max(regimen_end_date) over
+      		  (PARTITION BY person_id, regimen,cohort_definition_id) as regimen_end_date,
+                 regimen, observation_period_end_date, death_date, cohort_start_date
+                FROM temp_0 ORDER BY 1, 2, 3
+            ),
 
 temp_1 as (
-          select cohort_definition_id, person_id, regimen_start_date, regimen_end_date,
-          regimen, row_number() over (PARTITION BY  person_id
+         select  cohort_definition_id, person_id, regimen_start_date, regimen_end_date,
+          regimen, row_number() over (PARTITION BY  person_id, cohort_definition_id
           ORDER BY cohort_definition_id, person_id, regimen_start_date) as Line_of_therapy,
           observation_period_end_date, death_date, cohort_start_date
-          FROM temp ORDER BY 1,2,3,6
+          FROM temp_t ORDER BY 1,2,3,6
 ),
 
--- creation a table for analysis
-
-
-temp_2 as (
-SELECT cohort_definition_id,
+temp_2 as (SELECT cohort_definition_id,
        person_id,
        Line_of_therapy,
        regimen,
-  /*Time from discontinuation of one LoT to initiation of the subsequent LoT,
-	or date of death if death occurs prior to start of the subsequent LoT.
-	Patients will be censored at their last activity within the database
-	or end of follow-up. and test it
-	*/
-      	abs(lag(regimen_end_date, 1) over (PARTITION BY cohort_definition_id,
-      	person_id order by person_id) - regimen_start_date)
+       regimen_start_date,
+       regimen_end_date,
+	  cohort_start_date,
+	  observation_period_end_date,
+	   death_date,
+	sum(Line_of_therapy)
+
+from temp_1 group by cohort_definition_id,
+       person_id, Line_of_therapy,
+       regimen_start_date,
+       regimen_end_date, regimen,
+	   cohort_start_date,
+	   observation_period_end_date,
+	   death_date
+       order by 1,2,3,4)
+-- creation a table for analysis
+
+
+	   SELECT cohort_definition_id,
+       person_id,
+       Line_of_therapy,
+       regimen,
+       regimen_start_date,
+       regimen_end_date,
+	         	abs(lead(regimen_start_date, 1) over (PARTITION BY cohort_definition_id,
+      	person_id order by person_id) - regimen_end_date)
 			            as Treatment_free_Interval,
 
-	/*Length of time from the initiation of each LoT to the date the patient discontinues
-	the treatment (i.e., the last administration or noncancelled order of
-	a drug contained in the same regimen). TTD will be described for the
-	first two LoTs. Discontinuation will be defined as having a subsequent
-	systemic anti-neoplastic therapy regimen after the first LoT; having a
-	gap of more than 120 days with no systemic anti-neoplastic therapy following
-	the last administration; or having a date of death while on the regimen.
-	Patients will be censored at their last known usage within the database
-	or end of follow-up
-	*/
 	CASE when abs(lead(regimen_start_date, 1) over (PARTITION BY
 	               cohort_definition_id,	person_id
 	               order by cohort_definition_id,
-							   person_id) - regimen_start_date) >= 120
+							   person_id) - regimen_start_date) >= @gapBetweenTreatment
 							   OR lead(regimen_start_date, 1) over (PARTITION BY
 							   cohort_definition_id,person_id
 							   order by cohort_definition_id,person_id) IS NULL
 							   then abs(regimen_start_date - regimen_end_date)
 							   end as Time_to_Treatment_Discontinuation,
-
-	/*Time from the index date to the date the patient received their next systemic
-anti-neoplastic treatment regimen or to their date of death if death occurs prior
-to having another systemic anti-neoplastic treatment regimen. Patients will be censored
-at their last activity within the database or end of follow-up*/
 
 	CASE when Line_of_therapy = 1 AND
 	  lead(regimen_start_date, 1) over (PARTITION BY cohort_definition_id, person_id
@@ -103,17 +105,6 @@ at their last activity within the database or end of follow-up*/
 							   person_id) - regimen_end_date)
 							   end
 							   as Time_to_Next_Treatment
-
-from temp_1 group by cohort_definition_id,
-       person_id, Line_of_therapy,
-       regimen_start_date,
-       regimen_end_date, regimen,
-	   cohort_start_date,
-	   observation_period_end_date,
-	   death_date
-       order by 1,2,3,4
-)
-
-SELECT *
 INTO @cohortDatabaseSchema.@regimenStatsTable
-FROM temp_2
+from temp_2 order by 1,2,3,4
+
