@@ -18,6 +18,7 @@ getPathToTreatmentStats <- function() {
   return("inst/sql/sql_server/TreatmentAnalysis")
 }
 
+
 getPathToQuantiles <- function() {
   return("inst/sql/sql_server/distributions")
 }

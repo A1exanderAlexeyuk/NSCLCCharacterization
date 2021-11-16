@@ -57,7 +57,6 @@ if(createRegimenStats){
     connection = connection,
     cdmDatabaseSchema = cdmDatabaseSchema,
     writeDatabaseSchema = writeDatabaseSchema,
-    cohortDatabaseSchema = cohortDatabaseSchema,
     cohortTable = cohortStagingTable,
     regimenStatsTable = regimenStatsTable,
     regimenIngredientsTable = regimenIngredientsTable,

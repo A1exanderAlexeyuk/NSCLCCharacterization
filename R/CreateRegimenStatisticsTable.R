@@ -16,11 +16,12 @@
 #'
 createRegimenStats <- function(connection,
                                cdmDatabaseSchema,
-                               cohortDatabaseSchema,
+                               writeDatabaseSchema,
                                cohortTable,
                                regimenStatsTable,
                                regimenIngredientsTable,
                                gapBetweenTreatment = 120) {
+  cohortDatabaseSchema <-  writeDatabaseSchema
   sql <- SqlRender::readSql(file.path(
     getPathToTreatmentStats(),
     "CreateRegimenStatsTable.sql"
