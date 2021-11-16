@@ -1,8 +1,6 @@
-DROP TABLE IF EXISTS @cohortDatabaseSchema.@regimenStatsTable;
--- create subject regimen_stats_table
+DROP TABLE IF
+EXISTS @cohortDatabaseSchema.@regimenStatsTable;
 
---here i joined requeried tables (cohort, death, observation, person)
--- to collect data for future analysis
 with temp_ as (select DISTINCT c.cohort_definition_id, c.subject_id as person_id,
             c.cohort_start_date, c.cohort_end_date,
             op.observation_period_end_date,
@@ -66,7 +64,8 @@ from temp_1 group by cohort_definition_id,
 	   cohort_start_date,
 	   observation_period_end_date,
 	   death_date
-       order by 1,2,3,4)
+       order by 1,2,3,4
+)
 -- creation a table for analysis
 
 
