@@ -6,6 +6,7 @@ resultsDatabaseSchema <- Sys.getenv("testresultsDatabaseSchema")
 cdmDatabaseSchema <- Sys.getenv("testcdmDatabaseSchema")
 cohortDatabaseSchema <- resultsDatabaseSchema
 cohortTable <- Sys.getenv("testcohortTable")
+cohortTable <- "test2"
 databaseId <- "testDatabaseId"
 packageName <- "NSCLCCharacterization"
 # connectionDetails <- createConnectionDetails(dbms = "postgresql",
@@ -38,12 +39,8 @@ test_that("Create Cohort Table", {
     connection = conn,
     cohortDatabaseSchema = cohortDatabaseSchema,
     cohortTable = cohortTable,
-    createInclusionStatsTables = FALSE,
     resultsDatabaseSchema = cohortDatabaseSchema,
-    cohortInclusionTable = paste0(cohortTable, "_inclusion"),
-    cohortInclusionResultTable = paste0(cohortTable, "_inclusion_result"),
-    cohortInclusionStatsTable = paste0(cohortTable, "_inclusion_stats"),
-    cohortSummaryStatsTable = paste0(cohortTable, "_summary_stats")
+
   )
 
   expect_error(renderTranslateExecuteSql(
@@ -60,6 +57,14 @@ test_that("Create Cohort Table", {
     cohortDatabaseSchema = cohortDatabaseSchema,
     cohortTable = cohortTable
   ), "list")
+
+  expect_error(renderTranslateExecuteSql(
+    connection = conn, sql = "DROP TABLE
+                                       @cohortDatabaseSchema.@cohortTable
+                                       ",
+    cohortDatabaseSchema = cohortDatabaseSchema,
+    cohortTable = cohortTable
+  ), NA)
 })
 
 

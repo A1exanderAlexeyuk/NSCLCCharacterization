@@ -46,7 +46,7 @@ test_that("Survival test", {
 test_that("generateKaplanMeierDescriptionTFITTD", {
   # locally
   cohortDatabaseSchema <- "regimen_stats_schema"
-  regimenStatsTable <- "rst"
+  regimenStatsTable <- "rstF2"
   targetIds <- 1
   databaseId <- "test"
   connectionDetails <- DatabaseConnector::createConnectionDetails(
@@ -76,9 +76,9 @@ test_that("generateKaplanMeierDescriptionTFITTD", {
 # !!!Test passed
 test_that("generateKaplanMeierDescriptionTNT", {
   cohortDatabaseSchema <- "regimen_stats_schema"
-  regimenStatsTable <- "rst"
-  databaseId <- 1
+  regimenStatsTable <- "rstF2"
   targetIds <- 1
+  databaseId <- "test"
   connectionDetails <- DatabaseConnector::createConnectionDetails(
     dbms = "postgresql",
     server = "postgres/localhost",
@@ -89,6 +89,7 @@ test_that("generateKaplanMeierDescriptionTNT", {
     pathToDriver = Sys.getenv("DATABASECONNECTOR_JAR_FOLDER")
   )
   conn <- connect(connectionDetails = connectionDetails)
+
   testthat::expect_s3_class(NSCLCCharacterization::generateKaplanMeierDescriptionTNT(
     connection = conn,
     cohortDatabaseSchema = cohortDatabaseSchema,

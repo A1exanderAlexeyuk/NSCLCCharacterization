@@ -2,9 +2,10 @@ library(testthat)
 library(DatabaseConnector)
 library(SqlRender)
 library(lubridate)
-resultsDatabaseSchema <- Sys.getenv("testresultsDatabaseSchema")
+resultsDatabaseSchema <- 'alex_alexeyuk_results1'
 cdmDatabaseSchema <- Sys.getenv("testcdmDatabaseSchema")
-cohortDatabaseSchema <- resultsDatabaseSchema
+cohortDatabaseSchema <- 'alex_alexeyuk_results1'
+writeDatabaseSchema <- cohortDatabaseSchema
 cohortTable <- Sys.getenv("testcohortTable")
 databaseId <- "testDatabaseId"
 packageName <- "NSCLCCharacterization"
@@ -13,7 +14,7 @@ regimenIngredientsTable <- "cancer_regimen_ingredients_table"
 test_that("Create Regimen Statistics", {
   connectionDetails <- DatabaseConnector::createConnectionDetails(
     dbms = "postgresql",
-    server = Sys.getenv("testserver"),
+    server = "testnode.arachnenetwork.com/synpuf_2m",
     user = Sys.getenv("testuser"),
     password = Sys.getenv("testuser"),
     port = Sys.getenv("testport")
@@ -22,29 +23,41 @@ test_that("Create Regimen Statistics", {
   expect_error(NSCLCCharacterization::createRegimenStats(
     connection = conn,
     cdmDatabaseSchema = cdmDatabaseSchema,
-    cohortDatabaseSchema = cohortDatabaseSchema,
+    writeDatabaseSchema = writeDatabaseSchema,
     cohortTable = cohortTable,
     regimenStatsTable = regimenStatsTable,
     regimenIngredientsTable = regimenIngredientsTable,
     gapBetweenTreatment = 120
   ), NA)
 
-  expect_true(isTRUE(unlist(DatabaseConnector::renderTranslateQuerySql(
-    connection = conn,
-    sql = "SELECT EXISTS (
-                                     SELECT FROM information_schema.tables
-                                     WHERE  table_schema = @cohortDatabaseSchema
-                                     AND    table_name   = @regimenStatsTable
-                                     );", cohortDatabaseSchema = cohortDatabaseSchema,
-    regimenStatsTable = regimenStatsTable
-  ))))
-
-
   expect_error(DatabaseConnector::renderTranslateQuerySql(
     connection = conn,
-    sql = "DROP TABLE
-                                                          @cohortDatabaseSchema.@regimenStatsTable);",
+    sql = "DROP TABLE  @cohortDatabaseSchema.@regimenStatsTable;",
     cohortDatabaseSchema = cohortDatabaseSchema,
     regimenStatsTable = regimenStatsTable
   ), NA)
+
 })
+
+test_that("Create Regimen Statistics", {
+  connectionDetails <- DatabaseConnector::createConnectionDetails(
+    dbms = "postgresql",
+    server = "postgres/localhost",
+    port = "5432",
+    connectionString = "jdbc:postgresql://localhost:5432/postgres",
+    user = "postgres",
+    password = "sql",
+    pathToDriver = Sys.getenv("DATABASECONNECTOR_JAR_FOLDER")
+  )
+  conn <- connect(connectionDetails = connectionDetails)
+  NSCLCCharacterization::createCategorizedRegimensTable(
+    connection = conn,
+    cohortDatabaseSchema = 'regimen_stats_schema',
+    regimenStatsTable = "rstF2",
+    targetIds = 1
+  )
+
+
+  expect_s3_class(t, 'data.frame')
+})
+

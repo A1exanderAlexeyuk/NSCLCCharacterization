@@ -26,15 +26,12 @@ test_that("Cohort Diagnostics", {
   )
   conn <- connect(connectionDetails = connectionDetails)
   outputFolder <- getwd()
-  expect_error(NSCLCCharacterization::runCohortDiagnostics(connection = conn,
-                                                          connectionDetails = connectionDetails,
-                                                           cdmDatabaseSchema = cdmDatabaseSchema,
-                                                           cohortDatabaseSchema = cdmDatabaseSchema,
-                                                           cohortTable = cohortTable,
-                                                           tempEmulationSchema = NULL,
-                                                          outputFolder = outputFolder), NA)
+  expect_error(NSCLCCharacterization::runCohortDiagnostics( connection = conn,
+                                                            connectionDetails = connectionDetails,
+                                                            cdmDatabaseSchema = cdmDatabaseSchema,
+                                                            cohortDatabaseSchema = cdmDatabaseSchema,
+                                                            cohortTable = cohortTable,
+                                                            tempEmulationSchema = NULL,
+                                                            outputFolder = outputFolder), NA)
 })
-
-
-
 
