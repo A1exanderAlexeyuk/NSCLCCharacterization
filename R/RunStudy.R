@@ -141,7 +141,7 @@ if(createRegimenStats){
   )
 
   # treatment free interval and time to treatment discontinuation
-  TFI_TTD <- generateKaplanMeierDescriptionTFI_TTD(
+  TFI <- generateKaplanMeierDescriptionTFI(
     connection = connection,
     cohortDatabaseSchema = cohortDatabaseSchema,
     regimenStatsTable = regimenStatsTable,
@@ -149,11 +149,23 @@ if(createRegimenStats){
     databaseId = databaseId
   )
 
-  writeToCsv(TFI_TTD, file.path(
+  writeToCsv(TFI, file.path(
     exportFolder,
-    "TFI_and_TTD.csv"
+    "TFI.csv"
   ))
 
+  TTD <- generateKaplanMeierDescriptionTTD(
+    connection = connection,
+    cohortDatabaseSchema = cohortDatabaseSchema,
+    regimenStatsTable = regimenStatsTable,
+    targetIds = targetIdsTreatmentIndex,
+    databaseId = databaseId
+  )
+
+  writeToCsv(TTD, file.path(
+    exportFolder,
+    "TTD.csv"
+  ))
   # Generate metricsDistribution info -----------------------------------------------------
   ParallelLogger::logInfo("Generating metrics distribution")
 

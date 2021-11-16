@@ -69,12 +69,12 @@ generateKaplanMeierDescriptionTNT <- function(connection,
                                               regimenStatsTable,
                                               targetIds,
                                               databaseId) {
-  sqlFilesName <- "TimeToNextTreatment.sql"
+  packageName <- getThisPackageName()
+  sqlFileName <- "TimeToNextTreatment.sql"
+  pathToSql <- system.file("sql", "sql_server", "TreatmentAnalysis",
+                           sqlFileName, package = packageName)
 
-  sql <- SqlRender::readSql(file.path(
-    getPathToTreatmentStats(),
-    sqlFilesName
-  ))
+  sql <- readChar(pathToSql, file.info(pathToSql)$size)
 
   linesTreatmentOutput <- purrr::map_dfr(targetIds, function(targetId) {
     sqlRendered <- SqlRender::render(
@@ -117,37 +117,89 @@ generateKaplanMeierDescriptionTNT <- function(connection,
   })
 }
 
-# K-M info for TreatmentFreeInterval and TimeToTreatmenDiscontinuation
 #' @export
-generateKaplanMeierDescriptionTFITTD <- function(connection,
+generateKaplanMeierDescriptionTFI <- function(connection,
                                                  cohortDatabaseSchema,
                                                  regimenStatsTable,
                                                  targetIds,
                                                  databaseId) {
-  sqlFilesName <- c(
-    "TreatmentFreeInterval.sql",
-    "TimeToTreatmenDiscontinuation.sql"
-  )
-
-  outcome <- "Time_to_Treatment_Discontinuation"
 
 
+  packageName <- getThisPackageName()
+  sqlFileName <- "TreatmentFreeInterval.sql"
+  pathToSql <- system.file("sql", "sql_server", "TreatmentAnalysis",
+                             sqlFileName, package = packageName)
+  sql <- readChar(pathToSql, file.info(pathToSql)$size)
 
-  sql_s <- lapply(
-    file.path(getPathToTreatmentStats(), sqlFilesName),
-    SqlRender::readSql
-  )
+  linesTreatmentOutput <- purrr::map_df(targetIds, function(targetId) {
+      sqlRendered <- SqlRender::render(
+        sql = sql,
+        cohortDatabaseSchema = cohortDatabaseSchema,
+        targetId = targetId,
+        regimenStatsTable = regimenStatsTable
+      )
 
-  linesTreatmentOutput <- purrr::map_dfr(sql_s, function(sql) {
-    purrr::map_df(targetIds, function(targetId) {
-      if (is.na(stringr::str_locate(
-        sql,
-        outcome
-      )[1])) {
-        outcomeId <- "TreatmentFreeInterval"
-      } else {
-        outcomeId <- "TimeToTreatmenDiscontinuation"
-      }
+      sqlTmp <- SqlRender::translate(
+        sql = sqlRendered,
+        targetDialect = connection@dbms
+      )
+
+      km_proc <- as.data.frame(DatabaseConnector::querySql(
+        connection = connection,
+        sql = sqlTmp,
+        snakeCaseToCamelCase = T
+      ))
+
+      km_proc_2 <- km_proc %>%
+        tidyr::nest(data = !lineOfTherapy) %>%
+        dplyr::mutate(survfit_output = purrr::map(
+          data, ~ survival::survfit(
+            survival::Surv(
+              timeToEvent, event
+            ) ~ 1,
+            data = .
+          )
+        ))
+
+
+      survivalSummary <- km_proc_2 %>%
+        dplyr::mutate(result = purrr::map(survfit_output, broom::tidy)) %>%
+        dplyr::select(lineOfTherapy, result) %>%
+        tidyr::unnest(cols = c(result))
+
+
+      data.frame(
+        targetId = targetId,
+        outcomeId = 'TreatmentFreeInterval',
+        lineOfTherapy = survivalSummary$lineOfTherapy,
+        time = survivalSummary$time,
+        surv = survivalSummary$estimate,
+        n.censor = survivalSummary$n.censor,
+        n.event = survivalSummary$n.event,
+        n.risk = survivalSummary$n.risk,
+        lower = survivalSummary$conf.low,
+        upper = survivalSummary$conf.high,
+        databaseId = databaseId
+      )
+    })
+}
+
+
+
+#' @export
+generateKaplanMeierDescriptionTTD <- function(connection,
+                                              cohortDatabaseSchema,
+                                              regimenStatsTable,
+                                              targetIds,
+                                              databaseId) {
+
+  packageName <- getThisPackageName()
+  sqlFileName <- "TimeToTreatmentDiscontinuation.sql"
+  pathToSql <- system.file("sql", "sql_server", "TreatmentAnalysis",
+                          sqlFileName, package = packageName)
+  sql <- readChar(pathToSql, file.info(pathToSql)$size)
+
+    linesTreatmentOutput <- purrr::map_df(targetIds, function(targetId) {
 
       sqlRendered <- SqlRender::render(
         sql = sql,
@@ -187,7 +239,7 @@ generateKaplanMeierDescriptionTFITTD <- function(connection,
 
       data.frame(
         targetId = targetId,
-        outcomeId = outcomeId,
+        outcomeId = 'TimeToTreatmentDiscontinuation',
         lineOfTherapy = survivalSummary$lineOfTherapy,
         time = survivalSummary$time,
         surv = survivalSummary$estimate,
@@ -199,9 +251,7 @@ generateKaplanMeierDescriptionTFITTD <- function(connection,
         databaseId = databaseId
       )
     })
-  })
 }
-
 
 #' @export
 generateTimeToTreatmenInitiationStatistics <- function(connection,
