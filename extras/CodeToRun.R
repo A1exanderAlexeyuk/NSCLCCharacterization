@@ -117,16 +117,16 @@ keyFileName <- "your-home-folder-here/.ssh/study-data-site-NSCLC"
 userName <- "study-data-site-NSCLC"
 
 # Run cohort diagnostics -----------------------------------
-runCohortDiagnostics <- function(connectionDetails = connectionDetails,
-                                 cdmDatabaseSchema = cdmDatabaseSchema,
-                                 cohortDatabaseSchema = cdmDatabaseSchema,
-                                 cohortTable = cohortTable,
-                                 tempEmulationSchema = tempEmulationSchema,
-                                 outputFolder = outputFolder,
-                                 databaseId = databaseId,
-                                 databaseName = databaseName,
+runCohortDiagnostics <- function(connectionDetails ,
+                                 cdmDatabaseSchema,
+                                 cohortDatabaseSchema,
+                                 cohortTable,
+                                 tempEmulationSchema,
+                                 outputFolder,
+                                 databaseId,
+                                 databaseName,
                                  databaseDescription = "Unknown",
-                                 cohortStagingTable = cohortStagingTable)
+                                 cohortStagingTable)
 
 
 # To view the results:
@@ -138,11 +138,11 @@ CohortDiagnostics::launchDiagnosticsExplorer(file.path(outputFolder, "diagnostic
 
 
 # To explore a specific cohort in the local database, viewing patient profiles:
-CohortDiagnostics::launchCohortExplorer(connectionDetails = connectionDetails,
-                                        cdmDatabaseSchema = cdmDatabaseSchema,
-                                        cohortDatabaseSchema = cohortDatabaseSchema,
-                                        cohortTable = cohortTable,
-                                        cohortId = 101)
+CohortDiagnostics::launchCohortExplorer(connectionDetails,
+                                        cdmDatabaseSchema,
+                                        cohortDatabaseSchema,
+                                        cohortTable,
+                                        cohortId)
 
 # When finished with reviewing the diagnostics, use the next command
 # to upload the diagnostic results
@@ -158,39 +158,40 @@ regimenTable <- "regimen_table"
 regimenIngredientsTable <- "name_of_your_regimen_stats_table" #sql db an output on OncologyRegimenFinder
 gapBetweenTreatment <- 120 # specify gap between lines what will be used as a difinition on TTD
 dateLagInput <- 30
-OncologyRegimenFinder::createRegimens(connectionDetails = connectionDetails,
-                                      cdmDatabaseSchema = cdmDatabaseSchema,
-                                      writeDatabaseSchema = writeDatabaseSchema,
-                                      cohortTable = cohortTable,
-                                      rawEventTable = rawEventTable,
-                                      regimenTable = regimenTable,
-                                      regimenIngredientTable = regimenIngredientTable,
-                                      vocabularyTable = vocabularyTable,
+OncologyRegimenFinder::createRegimens(connectionDetails,
+                                      cdmDatabaseSchema,
+                                      writeDatabaseSchema,
+                                      cohortTable ,
+                                      rawEventTable ,
+                                      regimenTable,
+                                      regimenIngredientTable,
+                                      vocabularyTable,
                                       addAntineoplasticAgents = TRUE,
                                       addEndocrineTherapy = FALSE,
                                       addImmunostimulants = FALSE,
                                       addImmunosuppressants = FALSE,
                                       cancerConceptId = 4115276,
-                                      dateLagInput = dateLagInput,
+                                      dateLagInput,
                                       generateVocabTable = FALSE,
                                       generateRawEvents = FALSE)
 
 # Use this to run the study. The results will be stored in a zip file called
 # 'Results_<databaseId>.zip in the outputFolder.
-runStudy(connectionDetails = connectionDetails,
-         connection = connection,
-         cdmDatabaseSchema = cdmDatabaseSchema,
-         tempEmulationSchema = tempEmulationSchema,
-         cohortDatabaseSchema = cohortDatabaseSchema,
-         cohortStagingTable = cohortStagingTable,
-         cohortTable = cohortTable,
-         featureSummaryTable = featureSummaryTable,
-         regimenIngredientsTable = regimenIngredientTable,
+runStudy(connectionDetails,
+         connection,
+         cdmDatabaseSchema,
+         writeDatabaseSchema,
+         tempEmulationSchema,
+         cohortDatabaseSchema,
+         cohortStagingTable,
+         cohortTable,
+         featureSummaryTable,
+         regimenIngredientsTable,
          createRegimenStats = TRUE,
-         gapBetweenTreatment = gapBetweenTreatment,
-         exportFolder = exportFolder,
-         databaseId = databaseId,
-         databaseName = databaseId,
+         gapBetweenTreatment ,
+         exportFolder,
+         databaseId,
+         databaseName,
          databaseDescription = "")
 
 
