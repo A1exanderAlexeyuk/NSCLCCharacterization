@@ -54,7 +54,7 @@ runStudy <- function(connectionDetails,
 if(createRegimenStats){
   if(!is.null(regimenIngredientsTable)){
   createRegimenStatsTable <- createcreateRegimenStats(
-    connection = connection,
+    connectionDetails = connectionDetails,
     cdmDatabaseSchema = cdmDatabaseSchema,
     writeDatabaseSchema = writeDatabaseSchema,
     cohortTable = cohortStagingTable,
@@ -72,7 +72,7 @@ if(createRegimenStats){
 
   ParallelLogger::logInfo("Generating regimen categories")
   categorizedRegimens <- createCategorizedRegimensTable(
-    connection = connection,
+    connectionDetails = connectionDetails,
     cohortDatabaseSchema = cohortDatabaseSchema,
     regimenStatsTable = regimenStatsTable,
     targetIds = targetIdsTreatmentIndex
