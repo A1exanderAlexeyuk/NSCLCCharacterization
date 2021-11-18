@@ -64,6 +64,7 @@ devtools::install_github("A1exanderAlexeyuk/NSCLCCharacterization")
 # *******************************************************
 # SECTION 2: Running the package ---------------------------------------------------------------
 # *******************************************************
+source('SankeyPlot.R')
 library(NSCLCCharacterization)
 
 # Optional: specify where the temporary files (used by the ff package) will be created:
@@ -117,7 +118,7 @@ keyFileName <- "your-home-folder-here/.ssh/study-data-site-NSCLC"
 userName <- "study-data-site-NSCLC"
 
 # Run cohort diagnostics -----------------------------------
-runCohortDiagnostics <- function(connectionDetails ,
+runCohortDiagnostics <- function(connectionDetails,
                                  cdmDatabaseSchema,
                                  cohortDatabaseSchema,
                                  cohortTable,
@@ -150,7 +151,7 @@ uploadDiagnosticsResults(outputFolder, keyFileName, userName)
 
 devtools::install_github("A1exanderAlexeyuk/OncologyRegimenFinder")
 library(OncologyRegimenFinder)
-writeDatabaseSchema <- "your_schema_to_write"
+writeDatabaseSchema <- "your_schema_to_write" # should be the same as cohortDatabaseSchema
 cdmDatabaseSchema <- "cdm_schema"
 vocabularyTable <- "vocabulary_table"
 cohortTable <- "cohort_table"
@@ -188,7 +189,7 @@ runStudy(connectionDetails,
          featureSummaryTable,
          regimenIngredientsTable,
          createRegimenStats = TRUE,
-         gapBetweenTreatment ,
+         gapBetweenTreatment,
          exportFolder,
          databaseId,
          databaseName,
@@ -202,4 +203,15 @@ preMergeResultsFiles(outputFolder)
 # When finished with reviewing the results, use the next command
 # upload study results to OHDSI SFTP server:
 uploadStudyResults(outputFolder, keyFileName, userName)
+source("extras/SankeyPlot.R")
+# categorizedRegimensInfo - csv file what will be created after RunStudy
+# cohortDefinitionId - 101 or 102 or 103
+#output - sankey plot
+createSankeyPlot(
+  categorizedRegimensInfo,
+  cohortDefinitionId
+)
+
+
+
 
