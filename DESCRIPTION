@@ -25,7 +25,9 @@ Imports:
   tibble,
   magrittr,
   survival,
-  survminer
+  survminer,
+  networkD3,
+  tidyr
 Suggests:
   knitr,
   rmarkdown
