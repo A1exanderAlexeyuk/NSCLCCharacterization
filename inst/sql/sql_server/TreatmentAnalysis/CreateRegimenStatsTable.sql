@@ -28,15 +28,28 @@ temp_0 as(
         	from temp_ ORDER BY 1,2,3,4
 ),
 
+with temp_0 as(
+  select  distinct cohort_definition_id, person_id, cohort_start_date, regimen_start_date,
+          coalesce(regimen_end_date, cohort_end_date,observation_period_end_date,
+          death_date ) as  regimen_end_date,
+          regimen, observation_period_end_date, death_date,
+		coalesce(lag(regimen, 1) over (order by person_id) != regimen, TRUE) as New_regimen
+        	from regimen_stats_schema.rst2
+			ORDER BY 1,2,3,9 desc, 4
+
+),
+
 temp_t as (
           select  distinct cohort_definition_id, person_id,
-       			min(regimen_start_date) over
-                (PARTITION BY person_id, regimen, cohort_definition_id) as regimen_start_date,
-                max(regimen_end_date) over
-      		  (PARTITION BY person_id, regimen,cohort_definition_id) as regimen_end_date,
-                 regimen, observation_period_end_date, death_date, cohort_start_date
-                FROM temp_0 ORDER BY 1, 2, 3
-            ),
+	 	min(regimen_start_date) over
+          (PARTITION BY person_id, cohort_definition_id, regimen)  as regimen_start_date,
+          max(regimen_end_date) over
+		  (PARTITION BY person_id, cohort_definition_id,regimen) as regimen_end_date,
+           regimen, observation_period_end_date, death_date, cohort_start_date
+          FROM temp_0
+		ORDER BY 1, 2, 3
+
+),
 
 temp_1 as (
          select  cohort_definition_id, person_id, regimen_start_date, regimen_end_date,
@@ -46,43 +59,47 @@ temp_1 as (
           FROM temp_t ORDER BY 1,2,3,6
 ),
 
+-- creation a table for analysis
+
+
+
 temp_2 as (SELECT cohort_definition_id,
        person_id,
        Line_of_therapy,
        regimen,
        regimen_start_date,
        regimen_end_date,
-	  cohort_start_date,
-	  observation_period_end_date,
-	   death_date,
-	sum(Line_of_therapy)
+  	   cohort_start_date,
+  	   observation_period_end_date,
+	     death_date,
+	     sum(Line_of_therapy)
 
-from temp_1 group by cohort_definition_id,
+from temp_1
+group by cohort_definition_id,
        person_id, Line_of_therapy,
        regimen_start_date,
        regimen_end_date, regimen,
-	   cohort_start_date,
-	   observation_period_end_date,
-	   death_date
-       order by 1,2,3,4
-)
--- creation a table for analysis
+  	   cohort_start_date,
+  	   observation_period_end_date,
+  	   death_date
+       order by 1,2,3,4),
 
-
-	   SELECT cohort_definition_id,
+temp_3 as (SELECT cohort_definition_id,
        person_id,
        Line_of_therapy,
        regimen,
        regimen_start_date,
        regimen_end_date,
-	         	abs(lead(regimen_start_date, 1) over (PARTITION BY cohort_definition_id,
-      	person_id order by person_id) - regimen_end_date)
+	   case when lead(regimen_start_date, 1) over (PARTITION BY cohort_definition_id,
+      	person_id order by person_id) - regimen_end_date < 0 then NULL
+	   else lead(regimen_start_date, 1) over (PARTITION BY cohort_definition_id,
+      	person_id order by person_id) - regimen_end_date end
 			            as Treatment_free_Interval,
 
-	CASE when abs(lead(regimen_start_date, 1) over (PARTITION BY
+	CASE when lead(regimen_start_date, 1) over (PARTITION BY
 	               cohort_definition_id,	person_id
 	               order by cohort_definition_id,
-							   person_id) - regimen_start_date) >= @gapBetweenTreatment
+							   person_id) - regimen_start_date >= 120
 							   OR lead(regimen_start_date, 1) over (PARTITION BY
 							   cohort_definition_id,person_id
 							   order by cohort_definition_id,person_id) IS NULL
@@ -91,19 +108,18 @@ from temp_1 group by cohort_definition_id,
 
 	CASE when Line_of_therapy = 1 AND
 	  lead(regimen_start_date, 1) over (PARTITION BY cohort_definition_id, person_id
-							   order by cohort_definition_id, person_id) IS NOT NULL
-							   then abs(lead(regimen_start_date, 1) over (PARTITION BY cohort_definition_id,
-							   person_id
-							   order by cohort_definition_id, person_id) - cohort_start_date)
-		when regimen_end_date = observation_period_end_date
-		OR regimen_end_date = death_date
-		then abs(lead(regimen_start_date, 1) over
-		(PARTITION BY cohort_definition_id,
-							   person_id
-							   order by cohort_definition_id,
-							   person_id) - regimen_end_date)
-							   end
-							   as Time_to_Next_Treatment
+	order by cohort_definition_id, person_id) IS NOT NULL AND
+	lead(regimen_start_date, 1) over (PARTITION BY cohort_definition_id, person_id
+	  order by cohort_definition_id, person_id) - cohort_start_date > 0
+	   then lead(regimen_start_date, 1) over (PARTITION BY cohort_definition_id, person_id
+	  order by cohort_definition_id, person_id) - cohort_start_date
+		end
+		as Time_to_Next_Treatment
+from temp_2
+order by  1,2,3, 5)
+
+
+select * from ww
 INTO @cohortDatabaseSchema.@regimenStatsTable
-from temp_2 order by 1,2,3,4
+from temp_2 order by 1,2,3,5
 
