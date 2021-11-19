@@ -1,19 +1,9 @@
 #' Create regimen stats table
-#'
-#' @description
-#' Computes features using all drugs, conditions, procedures, etc. observed on or prior to the cohort
-#' index date.
-#'
-#'
-#' @param regimenStatsTable  A table what will be created in cohortDatabaseSchema
-#'
-#' @param gapBetweenTreatment  To calculate time to treatment discontinuation
-#'
 #' @return
-#' A data frame with cohort characteristics.
+#' The function returns nothing. As side effect it creates regimen stats table in write database schema
 #'
 #' @export
-#'
+
 createRegimenStats <- function(connectionDetails,
                                cdmDatabaseSchema,
                                writeDatabaseSchema,
@@ -21,16 +11,13 @@ createRegimenStats <- function(connectionDetails,
                                regimenStatsTable,
                                regimenIngredientsTable,
                                gapBetweenTreatment = 120) {
-  cohortDatabaseSchema <-  writeDatabaseSchema
+  cohortDatabaseSchema <- writeDatabaseSchema
   packageName <- getThisPackageName()
   sqlFileName <- "CreateRegimenStatsTable.sql"
-  pathToSql <- system.file("sql", "sql_server", "TreatmentAnalysis", sqlFileName, package = packageName)
+  pathToSql <- system.file("sql", "sql_server", "TreatmentAnalysis",
+                           sqlFileName, package = packageName)
 
   sql <- readChar(pathToSql, file.info(pathToSql)$size)
-  # sql <- SqlRender::readSql(file.path(
-  #   getPathToTreatmentStats(),
-  #   "CreateRegimenStatsTable.sql"
-  # ))
 
   sqlRendered <- SqlRender::render(
     sql = sql,
@@ -53,41 +40,36 @@ createRegimenStats <- function(connectionDetails,
   )
 }
 
+
+#' @returns dataframe with categories of treatment
 #' @export
 createCategorizedRegimensTable <- function(connectionDetails,
                                            cohortDatabaseSchema,
                                            regimenStatsTable,
                                            targetIds) {
-
   packageName <- getThisPackageName()
   sqlFileName <- "RegimenCategories.sql"
   pathToSql <- system.file("sql", "sql_server",
-                           "TreatmentAnalysis", sqlFileName,
-                           package = packageName)
+    "TreatmentAnalysis", sqlFileName,
+    package = packageName
+  )
   sql <- readChar(pathToSql, file.info(pathToSql)$size)
-  # sql <- readChar(pathToSql, file.info(pathToSql)$size)
-  # sql <- SqlRender::readSql(file.path(
-  #   getPathToTreatmentStats(),
-  #   "RegimenCategories.sql"
-  # ))
 
+  sqlTmp <- SqlRender::render(
+    sql = sql,
+    cohortDatabaseSchema = cohortDatabaseSchema,
+    regimenStatsTable = regimenStatsTable,
+    targetIds = targetIds
+  )
 
-    sqlTmp <- SqlRender::render(
-      sql = sql,
-      cohortDatabaseSchema = cohortDatabaseSchema,
-      regimenStatsTable = regimenStatsTable,
-      targetIds = targetIds
-    )
-
-    sqlTmp <- SqlRender::translate(
-      sql = sqlTmp,
-      targetDialect = connectionDetails$dbms
-    )
-    connection <- DatabaseConnector::connect(connectionDetails = connectionDetails)
-    as.data.frame(DatabaseConnector::querySql(
-      connection = connection,
-      sql = sqlTmp,
-      snakeCaseToCamelCase = T
-    ))
-
+  sqlTmp <- SqlRender::translate(
+    sql = sqlTmp,
+    targetDialect = connectionDetails$dbms
+  )
+  connection <- DatabaseConnector::connect(connectionDetails = connectionDetails)
+  as.data.frame(DatabaseConnector::querySql(
+    connection = connection,
+    sql = sqlTmp,
+    snakeCaseToCamelCase = T
+  ))
 }
