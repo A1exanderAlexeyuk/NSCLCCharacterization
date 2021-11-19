@@ -16,7 +16,6 @@ with temp_ as (select DISTINCT c.cohort_definition_id, c.subject_id as person_id
             and op.observation_period_start_date <= c.cohort_start_date
             and op.observation_period_end_date >= c.cohort_end_date
           LEFT JOIN @cdmDatabaseSchema.death d on d.person_id = c.subject_id
-          LEFT JOIN @cdmDatabaseSchema.person p on c.subject_id = p.person_id
           ORDER BY c.cohort_definition_id, c.subject_id, r.regimen_start_date),
 
 
@@ -24,17 +23,17 @@ temp_0 as(
         select  cohort_definition_id, person_id, cohort_start_date, regimen_start_date,
           coalesce(regimen_end_date, cohort_end_date,observation_period_end_date,
           death_date ) as  regimen_end_date,
-          regimen, observation_period_end_date, death_date
+          regimen, observation_period_end_date, death_date , cohort_end_date
         	from temp_ ORDER BY 1,2,3,4
 ),
 
-with temp_0 as(
+temp_cte as(
   select  distinct cohort_definition_id, person_id, cohort_start_date, regimen_start_date,
           coalesce(regimen_end_date, cohort_end_date,observation_period_end_date,
           death_date ) as  regimen_end_date,
           regimen, observation_period_end_date, death_date,
 		coalesce(lag(regimen, 1) over (order by person_id) != regimen, TRUE) as New_regimen
-        	from regimen_stats_schema.rst2
+        	from temp_0
 			ORDER BY 1,2,3,9 desc, 4
 
 ),
@@ -46,7 +45,7 @@ temp_t as (
           max(regimen_end_date) over
 		  (PARTITION BY person_id, cohort_definition_id,regimen) as regimen_end_date,
            regimen, observation_period_end_date, death_date, cohort_start_date
-          FROM temp_0
+          FROM temp_cte
 		ORDER BY 1, 2, 3
 
 ),
@@ -99,7 +98,7 @@ temp_3 as (SELECT cohort_definition_id,
 	CASE when lead(regimen_start_date, 1) over (PARTITION BY
 	               cohort_definition_id,	person_id
 	               order by cohort_definition_id,
-							   person_id) - regimen_start_date >= 120
+							   person_id) - regimen_start_date >= @gapBetweenTreatment
 							   OR lead(regimen_start_date, 1) over (PARTITION BY
 							   cohort_definition_id,person_id
 							   order by cohort_definition_id,person_id) IS NULL
@@ -119,7 +118,7 @@ from temp_2
 order by  1,2,3, 5)
 
 
-select * from ww
+select *
 INTO @cohortDatabaseSchema.@regimenStatsTable
-from temp_2 order by 1,2,3,5
+from temp_3 order by 1,2,3,5
 
