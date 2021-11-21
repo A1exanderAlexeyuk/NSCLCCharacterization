@@ -13,6 +13,7 @@ runStudy <- function(connectionDetails,
                      cohortIdsToExcludeFromResultsExport = NULL,
                      regimenIngredientsTable = regimenIngredientsTable,
                      createRegimenStats = TRUE,
+                     dropRegimenStatsTable = FALSE,
                      exportFolder,
                      databaseId,
                      databaseName = databaseId,
@@ -51,38 +52,38 @@ runStudy <- function(connectionDetails,
   targetIdsTreatmentIndex <- getCohortsToCreate()$cohortId[1:3]
 
   # Generate  regimen stats table -----------------------------------------------------------------
-if(createRegimenStats){
-  if(!is.null(regimenIngredientsTable)){
-  createRegimenStatsTable <- createcreateRegimenStats(
-    connectionDetails = connectionDetails,
-    cdmDatabaseSchema = cdmDatabaseSchema,
-    writeDatabaseSchema = writeDatabaseSchema,
-    cohortTable = cohortStagingTable,
-    regimenStatsTable = regimenStatsTable,
-    regimenIngredientsTable = regimenIngredientsTable,
-    gapBetweenTreatment = gapBetweenTreatment
-  )
-  }else{
-    ParallelLogger::logWarn("Specify regimen ingredients table")
+  if (createRegimenStats) {
+    if (!is.null(regimenIngredientsTable)) {
+      createRegimenStatsTable <- createcreateRegimenStats(
+        connectionDetails = connectionDetails,
+        cdmDatabaseSchema = cdmDatabaseSchema,
+        writeDatabaseSchema = writeDatabaseSchema,
+        cohortTable = cohortStagingTable,
+        regimenStatsTable = regimenStatsTable,
+        regimenIngredientsTable = regimenIngredientsTable,
+        gapBetweenTreatment = gapBetweenTreatment
+      )
+    } else {
+      ParallelLogger::logWarn("Specify regimen ingredients table")
+    }
+
+    # Generate categorized regimens  info -----------------------------------------------------------------
+
+
+
+    ParallelLogger::logInfo("Generating regimen categories")
+    categorizedRegimens <- createCategorizedRegimensTable(
+      connectionDetails = connectionDetails,
+      cohortDatabaseSchema = cohortDatabaseSchema,
+      regimenStatsTable = regimenStatsTable,
+      targetIds = targetIdsTreatmentIndex
+    )
+
+    writeToCsv(categorizedRegimens, file.path(
+      exportFolder,
+      "categorizedRegimens_info.csv"
+    ))
   }
-
-  # Generate categorized regimens  info -----------------------------------------------------------------
-
-
-
-  ParallelLogger::logInfo("Generating regimen categories")
-  categorizedRegimens <- createCategorizedRegimensTable(
-    connectionDetails = connectionDetails,
-    cohortDatabaseSchema = cohortDatabaseSchema,
-    regimenStatsTable = regimenStatsTable,
-    targetIds = targetIdsTreatmentIndex
-  )
-
-  writeToCsv(categorizedRegimens, file.path(
-    exportFolder,
-    "categorizedRegimens_info.csv"
-  ))
-}
 
   # Generate survival info -----------------------------------------------------------------
 
@@ -104,8 +105,7 @@ if(createRegimenStats){
   writeToCsv(SurvivalInfo, file.path(
     exportFolder,
     "Survuval_info.csv"
-  )
-  )
+  ))
 
   # Generate treatment outcomes info -----------------------------------------------------
   ParallelLogger::logInfo("**********************************************************")
@@ -137,8 +137,7 @@ if(createRegimenStats){
   writeToCsv(timeToNT, file.path(
     exportFolder,
     "timeToNT.csv"
-   )
-  )
+  ))
 
   # treatment free interval and time to treatment discontinuation
   TFI <- generateKaplanMeierDescriptionTFI(
@@ -166,6 +165,14 @@ if(createRegimenStats){
     exportFolder,
     "TTD.csv"
   ))
+  ParallelLogger::logInfo("Dropping RegimenStatsTable")
+  if(dropRegimenStatsTable){
+    DatabaseConnector::renderTranslateExecuteSql(connection = connection,
+                                                 sql = "DROP TABLE IF EXISTS @writeDatabaseSchema.@regimenStatsTable",
+                                                 writeDatabaseSchema = writeDatabaseSchema,
+                                                 regimenStatsTable = regimenStatsTable
+                                                 )
+  }
   # Generate metricsDistribution info -----------------------------------------------------
   ParallelLogger::logInfo("Generating metrics distribution")
 
@@ -194,8 +201,7 @@ if(createRegimenStats){
     "PDLAtIndex",
     "PlateletToLymphocyteRatioAtIndex"
   )
-  for(analysis in DistribAnalyses){
-
+  for (analysis in DistribAnalyses) {
     result <- getAtEventDistribution(
       connection = connection,
       cohortDatabaseSchema = cohortDatabaseSchema,
@@ -206,7 +212,7 @@ if(createRegimenStats){
       packageName = getThisPackageName(),
       analysisName = analysis
     )
-    metricsDistribution<- rbind(metricsDistribution, result)
+    metricsDistribution <- rbind(metricsDistribution, result)
   }
 
 
@@ -214,8 +220,7 @@ if(createRegimenStats){
   writeToCsv(metricsDistribution, file.path(
     exportFolder,
     "metrics_distribution.csv"
-    )
-  )
+  ))
   # drom temp tables
   pathToSql <- system.file("sql",
     "sql_server",
@@ -428,4 +433,3 @@ enforceMinCellValue <- function(data, fieldName, minValues, silent = FALSE) {
   }
   return(data)
 }
-
