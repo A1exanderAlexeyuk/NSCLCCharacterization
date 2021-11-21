@@ -118,16 +118,19 @@ keyFileName <- "your-home-folder-here/.ssh/study-data-site-NSCLC"
 userName <- "study-data-site-NSCLC"
 
 # Run cohort diagnostics -----------------------------------
-runCohortDiagnostics <- function(connectionDetails,
-                                 cdmDatabaseSchema,
-                                 cohortDatabaseSchema,
-                                 cohortTable,
-                                 tempEmulationSchema,
-                                 outputFolder,
-                                 databaseId,
-                                 databaseName,
-                                 databaseDescription = "Unknown",
-                                 cohortStagingTable)
+NSCLCCharacterization::runCohortDiagnostics <- function(
+  connection,
+  connectionDetails,
+  cdmDatabaseSchema,
+  cohortDatabaseSchema,
+  cohortTable,
+  tempEmulationSchema,
+  outputFolder,
+  databaseId,
+  databaseName,
+  databaseDescription = "Unknown",
+  cohortStagingTable
+  )
 
 
 # To view the results:
@@ -193,6 +196,7 @@ runStudy(connectionDetails,
          exportFolder,
          databaseId,
          databaseName,
+         dropRegimenStatsTable = FALSE,
          databaseDescription = "")
 
 
