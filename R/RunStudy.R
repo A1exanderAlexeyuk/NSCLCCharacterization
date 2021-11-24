@@ -115,9 +115,10 @@ runStudy <- function(connectionDetails,
   outcomesTI <- KMOutcomes$cohortId[KMOutcomes$name %in% c("Treatment initiation")]
   timeToTI <- generateTimeToTreatmenInitiationStatistics(
     connection = connection,
-    cohortDatabaseSchema,
+    cohortDatabaseSchema = cohortDatabaseSchema,
     targetIds = cohortIdsConditionIndex,
     outcomeId = outcomesTI,
+    cohortTable = cohortTable,
     databaseId = databaseId
   )
   writeToCsv(timeToTI, file.path(
