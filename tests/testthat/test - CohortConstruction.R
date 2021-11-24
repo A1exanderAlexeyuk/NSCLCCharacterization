@@ -2,30 +2,21 @@ library(testthat)
 library(DatabaseConnector)
 library(SqlRender)
 library(lubridate)
-resultsDatabaseSchema <- Sys.getenv("testresultsDatabaseSchema")
-cdmDatabaseSchema <- Sys.getenv("testcdmDatabaseSchema")
-cohortDatabaseSchema <- resultsDatabaseSchema
-cohortTable <- Sys.getenv("testcohortTable")
-cohortTable <- "test2"
+cohortDatabaseSchema <- 'regimen_stats_schema'
+cohortTable <- 'construct_test'
 databaseId <- "testDatabaseId"
 packageName <- "NSCLCCharacterization"
-# connectionDetails <- createConnectionDetails(dbms = "postgresql",
-#                                              server = Sys.getenv("testserver"),
-#                                              user = Sys.getenv("testuser"),
-#                                              password = Sys.getenv("testuser"),
-#                                              port = Sys.getenv("testport"))
-# conn <- connect(connectionDetails=connectionDetails)
-#Test passed
 test_that("Create Cohort Table", {
-
-  connectionDetails <- createConnectionDetails(
+  connectionDetails <- DatabaseConnector::createConnectionDetails(
     dbms = "postgresql",
-    server = Sys.getenv("testserver"),
-    user = Sys.getenv("testuser"),
-    password = Sys.getenv("testuser"),
-    port = Sys.getenv("testport")
+    server = Sys.getenv("postgres_local_server"),
+    port = "5432",
+    connectionString = Sys.getenv("postgres_local_conn_string"),
+    user = "postgres",
+    password = Sys.getenv("postgres_local_password")
   )
   conn <- connect(connectionDetails = connectionDetails)
+
   expect_error(renderTranslateExecuteSql(
     connection = conn, sql = "INSERT INTO
                                        @cohortDatabaseSchema.@cohortTable
@@ -40,7 +31,6 @@ test_that("Create Cohort Table", {
     cohortDatabaseSchema = cohortDatabaseSchema,
     cohortTable = cohortTable,
     resultsDatabaseSchema = cohortDatabaseSchema,
-
   )
 
   expect_error(renderTranslateExecuteSql(
@@ -66,6 +56,3 @@ test_that("Create Cohort Table", {
     cohortTable = cohortTable
   ), NA)
 })
-
-
-

@@ -1,27 +1,24 @@
 library(testthat)
 library(DatabaseConnector)
 library(SqlRender)
-library(lubridate)
-resultsDatabaseSchema <- 'alex_alexeyuk_results1'
-cdmDatabaseSchema <- Sys.getenv("testcdmDatabaseSchema")
-cohortDatabaseSchema <- 'alex_alexeyuk_results1'
-writeDatabaseSchema <- cohortDatabaseSchema
-cohortTable <- Sys.getenv("testcohortTable")
-databaseId <- "testDatabaseId"
-packageName <- "NSCLCCharacterization"
-regimenStatsTable <- "regimenStatsTable"
-regimenIngredientsTable <- "cancer_regimen_ingredients_table"
+
 test_that("Create Regimen Statistics", {
   connectionDetails <- DatabaseConnector::createConnectionDetails(
     dbms = "postgresql",
-    server = "testnode.arachnenetwork.com/synpuf_2m",
-    user = Sys.getenv("testuser"),
-    password = Sys.getenv("testuser"),
-    port = Sys.getenv("testport")
-  )
+    server = Sys.getenv("postgres_local_server"),
+    port = "5432",
+    connectionString = Sys.getenv("postgres_local_conn_string"),
+    user = "postgres",
+    password = Sys.getenv("postgres_local_password")
+    )
   conn <- connect(connectionDetails = connectionDetails)
+  cdmDatabaseSchema = "regimen_stats_schema"
+  writeDatabaseSchema = "regimen_stats_schema"
+  regimenIngredientsTable <- "regimeningredienttable"
+  regimenStatsTable <- "regimenStatsTable"
+  cohortTable = "ct"
   expect_error(NSCLCCharacterization::createRegimenStats(
-    connection = conn,
+    connectionDetails = connectionDetails,
     cdmDatabaseSchema = cdmDatabaseSchema,
     writeDatabaseSchema = writeDatabaseSchema,
     cohortTable = cohortTable,
@@ -30,34 +27,47 @@ test_that("Create Regimen Statistics", {
     gapBetweenTreatment = 120
   ), NA)
 
-  expect_error(DatabaseConnector::renderTranslateQuerySql(
-    connection = conn,
-    sql = "DROP TABLE  @cohortDatabaseSchema.@regimenStatsTable;",
-    cohortDatabaseSchema = cohortDatabaseSchema,
-    regimenStatsTable = regimenStatsTable
-  ), NA)
-
+  t <- DatabaseConnector::renderTranslateQuerySql(connection = conn,
+                                                  sql = "SELECT * FROM @writeDatabaseSchema.@regimenStatsTable",
+                                                  writeDatabaseSchema = writeDatabaseSchema,
+                                                  regimenStatsTable = regimenStatsTable,
+                                                  snakeCaseToCamelCase = TRUE)
+  expect_true(all(test$treatmentFreeInterval) > 0)
+  expect_true(all(test$timeToTreatmentDiscontinuation) > 0)
+  expect_true(all(test$timeToNextTreatment) > 0)
 })
 
-test_that("Create Regimen Statistics", {
+
+
+
+
+test_that("Create Regimen Categories", {
+  cdmDatabaseSchema = "regimen_stats_schema"
+  writeDatabaseSchema = "regimen_stats_schema"
+  cohortDatabaseSchema = writeDatabaseSchema
+  regimenIngredientsTable <- "regimeningredienttable"
+  regimenStatsTable <- "regimenStatsTable"
   connectionDetails <- DatabaseConnector::createConnectionDetails(
     dbms = "postgresql",
-    server = "postgres/localhost",
+    server = Sys.getenv("postgres_local_server"),
     port = "5432",
-    connectionString = "jdbc:postgresql://localhost:5432/postgres",
+    connectionString = Sys.getenv("postgres_local_conn_string"),
     user = "postgres",
-    password = "sql",
-    pathToDriver = Sys.getenv("DATABASECONNECTOR_JAR_FOLDER")
+    password = Sys.getenv("postgres_local_password")
   )
   conn <- connect(connectionDetails = connectionDetails)
-  NSCLCCharacterization::createCategorizedRegimensTable(
-    connection = conn,
-    cohortDatabaseSchema = 'regimen_stats_schema',
-    regimenStatsTable = "rstF2",
+  t <- NSCLCCharacterization::createCategorizedRegimensTable(
+    connectionDetails,
+    cohortDatabaseSchema = cohortDatabaseSchema,
+    regimenStatsTable = regimenStatsTable,
     targetIds = 1
   )
+  expect_s3_class(t, "data.frame")
+
+  expect_true(dim(t)[[1]] > 0)
 
 
-  expect_s3_class(t, 'data.frame')
 })
+
+
 

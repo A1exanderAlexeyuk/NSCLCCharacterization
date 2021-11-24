@@ -9,18 +9,20 @@ cohortTable <- Sys.getenv("testcohortTable")
 databaseId <- "testDatabaseId"
 packageName <- "NSCLCCharacterization"
 test_that("Survival test", {
-  connectionDetails <- createConnectionDetails(
-    dbms = "postgresql",
-    server = Sys.getenv("testserver"),
-    user = Sys.getenv("testuser"),
-    password = Sys.getenv("testuser"),
-    port = Sys.getenv("testport")
+  connectionDetails <- createConnectionDetails(    dbms = "postgresql",
+                                                   server = "postgres/localhost",
+                                                   port = "5432",
+                                                   connectionString = "jdbc:postgresql://localhost:5432/postgres",
+                                                   user = "postgres",
+                                                   password = "sql",
   )
   conn <- connect(connectionDetails = connectionDetails)
-  targetIds <- 1
-  outcomeId <- 3
-
-  expect_s3_class(NSCLCCharacterization::generateSurvival(
+  targetIds <- c(101,102)
+  outcomeId <- 103
+  cohortDatabaseSchema <- "regimen_stats_schema"
+  regimenStatsTable <- "rstF3"
+  cohortTable = "ct_4test"
+  test <- NSCLCCharacterization::generateSurvival(
     connection = conn,
     cohortDatabaseSchema = cohortDatabaseSchema,
     cohortTable = cohortTable,
@@ -28,7 +30,11 @@ test_that("Survival test", {
     outcomeId = outcomeId,
     packageName = "NSCLCCharacterization",
     databaseId = databaseId
-  ), "data.frame")
+  )
+  expect_s3_class(test, "data.frame")
+
+  expect_true(nrow(test) > 0)
+
 
 })
 
@@ -117,6 +123,35 @@ test_that("generateKaplanMeierDescriptionTNT", {
     targetIds = targetIds,
     databaseId = databaseId
   )
+  testthat::expect_s3_class(t, "data.frame")
+  expect_true(dim(t)[[1]]>0)
+})
+
+
+
+test_that("generateTimeToTreatmenInitiationStatistics", {
+  cohortDatabaseSchema <- "regimen_stats_schema"
+  targetIds <- c(101,102)
+  outcomeId <- 103
+  regimenStatsTable <- "rstF3"
+  cohortTable = "ct_4test"
+  databaseId <- "test"
+  connectionDetails <- DatabaseConnector::createConnectionDetails(
+    dbms = "postgresql",
+    server = "postgres/localhost",
+    port = "5432",
+    connectionString = "jdbc:postgresql://localhost:5432/postgres",
+    user = "postgres",
+    password = "sql",
+    pathToDriver = Sys.getenv("DATABASECONNECTOR_JAR_FOLDER")
+  )
+  conn <- connect(connectionDetails = connectionDetails)
+  t <- NSCLCCharacterization::generateTimeToTreatmenInitiationStatistics(connection = conn,
+                                                                         cohortDatabaseSchema = cohortDatabaseSchema,
+                                                                          targetIds = targetIds,
+                                                                          outcomeId = outcomeId,
+                                                                         cohortTable = cohortTable,# treatment initiation
+                                                                          databaseId = databaseId)
   testthat::expect_s3_class(t, "data.frame")
   expect_true(dim(t)[[1]]>0)
 })
