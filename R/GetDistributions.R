@@ -4,7 +4,6 @@ getAtEventDistribution <- function(connection,
                                    cdmDatabaseSchema,
                                    cohortTable,
                                    targetIds,
-                                   outcomeId,
                                    databaseId,
                                    packageName,
                                    analysisName) {
@@ -41,11 +40,12 @@ getAtEventDistribution <- function(connection,
   )
   sql <- SqlRender::translate(sql, targetDialect = connection@dbms)
 
-  data <- DatabaseConnector::querySql(
+  data <- as.data.frame(DatabaseConnector::querySql(
     connection = connection,
     sql = sql,
     snakeCaseToCamelCase = T
-  )
+  ))
+
 
   if (nrow(data) == 0) {
     ParallelLogger::logWarn("There is NO data for atEventDistribution")
@@ -75,7 +75,7 @@ getAtEventDistribution <- function(connection,
       q3 = data$q3,
       maximum = data$maximum,
       mean = data$mean,
-      std = data$StD,
+      std = data$std,
       analysisName = data$analysisName,
       databaseId = databaseId
     )
