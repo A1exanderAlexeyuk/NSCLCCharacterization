@@ -32,9 +32,11 @@ uploadResults <- function(outputFolder, privateKeyFileName, userName, remoteFold
   if (length(fileName) > 1) {
     stop("Multiple results files found. Don't know which one to upload")
   }
-  OhdsiSharing::sftpUploadFile(privateKeyFileName = privateKeyFileName,
-                               userName = userName,
-                               remoteFolder = remoteFolder,
-                               fileName = fileName)
+  OhdsiSharing::sftpUploadFile(
+    privateKeyFileName = privateKeyFileName,
+    userName = userName,
+    remoteFolder = remoteFolder,
+    fileName = fileName
+  )
   ParallelLogger::logInfo("Finished uploading")
 }

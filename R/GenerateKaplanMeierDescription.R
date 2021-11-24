@@ -255,12 +255,14 @@ generateKaplanMeierDescriptionTTD <- function(connection,
   })
 }
 
+
 #' @export
 generateTimeToTreatmenInitiationStatistics <- function(connection,
                                                        cohortDatabaseSchema,
                                                        targetIds,
                                                        outcomeId, # treatment initiation
-                                                       databaseId) {
+                                                       databaseId,
+                                                       cohortTable) {
 
   packageName <- getThisPackageName()
   sqlFileName <- "TimeToTreatmentInitiation.sql"
@@ -278,7 +280,8 @@ generateTimeToTreatmenInitiationStatistics <- function(connection,
       cohortDatabaseSchema = cohortDatabaseSchema,
       outcomeId = outcomeId,
       targetId = targetId,
-      databaseId = databaseId
+      databaseId = databaseId,
+      cohortTable = cohortTable
     )
 
     sqlTmp <- SqlRender::translate(

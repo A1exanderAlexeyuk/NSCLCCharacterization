@@ -42,8 +42,7 @@ createCohortTable <- function(connectionDetails = NULL,
                               cohortDatabaseSchema,
                               cohortTable = "cohort",
                               createInclusionStatsTables = FALSE,
-                              resultsDatabaseSchema = cohortDatabaseSchema)
-  {
+                              resultsDatabaseSchema = cohortDatabaseSchema) {
   start <- Sys.time()
   ParallelLogger::logInfo("Creating cohort table")
   if (is.null(connection)) {
@@ -86,8 +85,6 @@ instantiateCohortSet <- function(connectionDetails = NULL,
                                  cohortTable = "cohort",
                                  cohortIds = NULL,
                                  createCohortTable = FALSE) {
-
-
   start <- Sys.time()
   if (is.null(connection)) {
     connection <- DatabaseConnector::connect(connectionDetails)
@@ -95,14 +92,15 @@ instantiateCohortSet <- function(connectionDetails = NULL,
   }
   if (createCohortTable) {
     needToCreate <- TRUE
-  } else { needToCreate <- FALSE }
+  } else {
+    needToCreate <- FALSE
+  }
 
   if (needToCreate) {
     createCohortTable(
       connection = connection,
       cohortDatabaseSchema = cohortDatabaseSchema,
       cohortTable = cohortTable
-
     )
   }
 
@@ -111,27 +109,25 @@ instantiateCohortSet <- function(connectionDetails = NULL,
 
   instantiatedCohortIds <- c()
   for (i in 1:nrow(cohorts)) {
+    ParallelLogger::logInfo(i, "/", nrow(cohorts), ": Instantiation cohort ", cohorts$cohortFullName[i], "  (", cohorts$cohortId[i], ".sql)")
+    sql <- cohorts$sql[i]
 
-      ParallelLogger::logInfo(i, "/", nrow(cohorts), ": Instantiation cohort ", cohorts$cohortFullName[i], "  (", cohorts$cohortId[i], ".sql)")
-      sql <- cohorts$sql[i]
+    sql <- SqlRender::render(sql,
+      cdm_database_schema = cdmDatabaseSchema,
+      vocabulary_database_schema = cdmDatabaseSchema,
+      target_database_schema = cohortDatabaseSchema,
+      target_cohort_table = cohortTable,
+      target_cohort_id = cohorts$cohortId[i],
+      warnOnMissingParameters = FALSE,
+      episodetable = FALSE
+    )
 
-        sql <- SqlRender::render(sql,
-          cdm_database_schema = cdmDatabaseSchema,
-          vocabulary_database_schema = cdmDatabaseSchema,
-          target_database_schema = cohortDatabaseSchema,
-          target_cohort_table = cohortTable,
-          target_cohort_id = cohorts$cohortId[i],
-          warnOnMissingParameters = FALSE,
-          episodetable = FALSE
-        )
-
-      sql <- SqlRender::translate(sql,
-        targetDialect = connectionDetails$dbms,
-        tempEmulationSchema = tempEmulationSchema
-      )
-      DatabaseConnector::executeSql(connection, sql)
-      instantiatedCohortIds <- c(instantiatedCohortIds, cohorts$cohortId[i])
-
+    sql <- SqlRender::translate(sql,
+      targetDialect = connectionDetails$dbms,
+      tempEmulationSchema = tempEmulationSchema
+    )
+    DatabaseConnector::executeSql(connection, sql)
+    instantiatedCohortIds <- c(instantiatedCohortIds, cohorts$cohortId[i])
   }
   delta <- Sys.time() - start
   writeLines(paste("Instantiating cohort set took", signif(delta, 3), attr(delta, "units")))

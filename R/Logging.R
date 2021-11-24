@@ -14,7 +14,11 @@
   lines <- c(lines, paste("-", si$basePkgs))
   lines <- c(lines, "")
   lines <- c(lines, "Other attached packages:")
-  for (pkg in si$otherPkgs) lines <- c(lines,
-                                       paste("- ", pkg$Package, " (", pkg$Version, ")", sep = ""))
+  for (pkg in si$otherPkgs) {
+    lines <- c(
+      lines,
+      paste("- ", pkg$Package, " (", pkg$Version, ")", sep = "")
+    )
+  }
   return(paste(lines, collapse = "\n"))
 }

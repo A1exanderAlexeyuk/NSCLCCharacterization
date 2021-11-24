@@ -64,8 +64,9 @@ runCohortDiagnostics <- function(connection,
                                  runCohortCharacterization = TRUE,
                                  cohortIdsToExcludeFromExecution = NULL,
                                  cohortGroups = getUserSelectableCohortGroups()) {
-  if (!file.exists(outputFolder))
+  if (!file.exists(outputFolder)) {
     dir.create(outputFolder, recursive = TRUE)
+  }
 
   ParallelLogger::addDefaultFileLogger(file.path(outputFolder, "log.txt"))
   ParallelLogger::addDefaultErrorReportLogger(file.path(outputFolder, "errorReportR.txt"))
@@ -126,28 +127,30 @@ runCohortDiagnostics <- function(connection,
   cohortIds <- getCohortsToCreate()$cohortId[1:3]
   cohortToCreateFile <- getCohortGroupsForDiagnostics()$fileName[1]
   ParallelLogger::logInfo("Running study diagnostics")
-  CohortDiagnostics::runCohortDiagnostics(packageName = getThisPackageName(),
-                                          cohortToCreateFile = cohortToCreateFile,
-                                          connectionDetails = connectionDetails,
-                                          cdmDatabaseSchema = cdmDatabaseSchema,
-                                          tempEmulationSchema = tempEmulationSchema,
-                                          cohortDatabaseSchema = cohortDatabaseSchema,
-                                          cohortTable = cohortTable,
-                                          cohortIds = cohortIds,
-                                          inclusionStatisticsFolder = outputFolder,
-                                          exportFolder = file.path(outputFolder, "diagnosticsExport"),
-                                          databaseId = databaseId,
-                                          databaseName = databaseName,
-                                          databaseDescription = databaseDescription,
-                                          runInclusionStatistics = FALSE,
-                                          runIncludedSourceConcepts = runIncludedSourceConcepts,
-                                          runOrphanConcepts = runOrphanConcepts,
-                                          runTimeDistributions = runTimeDistributions,
-                                          runBreakdownIndexEvents = runBreakdownIndexEvents,
-                                          runIncidenceRate = runIncidenceRates,
-                                          runCohortOverlap = runCohortOverlap,
-                                          runCohortCharacterization = runCohortCharacterization
-                                          )
+
+  CohortDiagnostics::runCohortDiagnostics(
+    packageName = getThisPackageName(),
+    cohortToCreateFile = cohortToCreateFile,
+    connectionDetails = connectionDetails,
+    cdmDatabaseSchema = cdmDatabaseSchema,
+    tempEmulationSchema = tempEmulationSchema,
+    cohortDatabaseSchema = cohortDatabaseSchema,
+    cohortTable = cohortTable,
+    cohortIds = cohortIds,
+    inclusionStatisticsFolder = outputFolder,
+    exportFolder = file.path(outputFolder, "diagnosticsExport"),
+    databaseId = databaseId,
+    databaseName = databaseName,
+    databaseDescription = databaseDescription,
+    runInclusionStatistics = FALSE,
+    runIncludedSourceConcepts = runIncludedSourceConcepts,
+    runOrphanConcepts = runOrphanConcepts,
+    runTimeDistributions = runTimeDistributions,
+    runBreakdownIndexEvents = runBreakdownIndexEvents,
+    runIncidenceRate = runIncidenceRates,
+    runCohortOverlap = runCohortOverlap,
+    runCohortCharacterization = runCohortCharacterization
+  )
 }
 
 
