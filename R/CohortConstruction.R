@@ -50,10 +50,10 @@ createCohortTable <- function(connectionDetails = NULL,
     on.exit(DatabaseConnector::disconnect(connection))
   }
   sql <- SqlRender::loadRenderTranslateSql("CreateCohortTable.sql",
-    packageName = getThisPackageName(),
-    dbms = connection@dbms,
-    cohort_database_schema = cohortDatabaseSchema,
-    cohort_table = cohortTable
+                                           packageName = getThisPackageName(),
+                                           dbms = connection@dbms,
+                                           cohort_database_schema = cohortDatabaseSchema,
+                                           cohort_table = cohortTable
   )
   DatabaseConnector::executeSql(connection, sql, progressBar = FALSE, reportOverallTime = FALSE)
   ParallelLogger::logDebug("- Created table ", cohortDatabaseSchema, ".", cohortTable)

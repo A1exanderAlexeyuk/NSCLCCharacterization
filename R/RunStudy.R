@@ -185,6 +185,7 @@ runStudy <- function(connectionDetails,
   )
 
   sql <- readChar(pathToSql, file.info(pathToSql)$size)
+
   DatabaseConnector::renderTranslateExecuteSql(connection,
                                                sql = sql,
                                                cdmDatabaseSchema = cdmDatabaseSchema,
