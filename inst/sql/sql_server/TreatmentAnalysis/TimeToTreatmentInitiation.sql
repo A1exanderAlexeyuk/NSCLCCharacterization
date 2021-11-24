@@ -62,7 +62,7 @@ SELECT
        ROUND (AVG(q1),1) AS q1,
        ROUND (AVG(median),1) AS median,
        ROUND (AVG(q3),1) AS q3,
-       ROUND (MAX(value),1) AS maximum
+       ROUND (MAX(value),1) AS maximum,
        'TimeToTreatmentInitiation' AS analysis_name,
        '@databaseId' AS databaseId
 

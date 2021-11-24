@@ -1,3 +1,10 @@
+/*
+regimen_1EGFR tyrosine kinase inhibitors (TKI) [Erlotinib, Gefitinib, Afatinib, Dacomitinib, Osimertinib]
+regimen_2Other TKIs [Crizotinib, Ceritinib, Brigatinib, Alectinib, Lorlatinib, Entrectinib,, Capmatinib, Selpercatinib, Pralsetinib, Vandetanib, Cabozantinib, Lenvatinib, Larotrectinib, Dabrafenib+Trametinib]
+regimen_3Immune checkpoint inhibitors (anti-PD1/L1, anti-CTLA-4 or both)
+regimen_4Immune checkpoint inhibitors (anti-PD1/L1) and platinum doublet chemotherapy with or without anti-VEGF monoclonal antibody (mAb) or dual immune checkpoint inhibitors (anti-PD1 and anti-CTLA-4) and platinum doublet chemotherapy
+regimen_5Platinum doublet chemotherapy with or without anti-VEGF mAb
+regimen_6Single agent chemotherapy with or without anti-VEGF mAb [Pemetrexed with or without Bevacizumab, Docetaxel with or without Ramucirumab]*/
 WITH cte AS (SELECT cohort_definition_id,
                     person_id,
                     Line_of_therapy,
