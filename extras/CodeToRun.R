@@ -45,15 +45,10 @@
 #
 #
 # *******************************************************
-# SECTION 1: Install the package and its dependencies (not needed if already done) -------------
+# SECTION 1: Install the package (not needed if already done) -------------
 # *******************************************************
 #
 #
-# First, it probably is best to make sure you are up-to-date on all existing packages.
-# Important: This code is best run in R, not RStudio, as RStudio may have some libraries
-# (like 'rlang') in use.
-update.packages(ask = "graphics")
-
 # When asked to update packages, select '1' ('update all') (could be multiple times)
 # When asked whether to install from source, select 'No' (could be multiple times)
 install.packages("devtools")
@@ -123,6 +118,7 @@ NSCLCCharacterization::runCohortDiagnostics <- function(
   connectionDetails,
   cdmDatabaseSchema,
   cohortDatabaseSchema,
+  createCohorts = TRUE,
   cohortTable,
   tempEmulationSchema,
   outputFolder,
@@ -130,7 +126,7 @@ NSCLCCharacterization::runCohortDiagnostics <- function(
   databaseName,
   databaseDescription = "Unknown",
   cohortStagingTable
-  )
+)
 
 
 # To view the results:
@@ -165,19 +161,17 @@ dateLagInput <- 30
 OncologyRegimenFinder::createRegimens(connectionDetails,
                                       cdmDatabaseSchema,
                                       writeDatabaseSchema,
-                                      cohortTable ,
-                                      rawEventTable ,
+                                      cohortTable,
+                                      rawEventTable,
                                       regimenTable,
                                       regimenIngredientTable,
                                       vocabularyTable,
-                                      addAntineoplasticAgents = TRUE,
-                                      addEndocrineTherapy = FALSE,
-                                      addImmunostimulants = FALSE,
-                                      addImmunosuppressants = FALSE,
                                       cancerConceptId = 4115276,
-                                      dateLagInput,
+                                      dateLagInput = 30,
                                       generateVocabTable = FALSE,
-                                      generateRawEvents = FALSE)
+                                      generateRawEvents = FALSE
+)
+
 
 # Use this to run the study. The results will be stored in a zip file called
 # 'Results_<databaseId>.zip in the outputFolder.
@@ -193,10 +187,10 @@ runStudy(connectionDetails,
          regimenIngredientsTable,
          createRegimenStats = TRUE,
          gapBetweenTreatment,
-         exportFolder,
+         exportFolder = outputFolder,
          databaseId,
          databaseName,
-         dropRegimenStatsTable = FALSE,
+         dropRegimenStatsTable = FALSE, # optional - drop created table
          databaseDescription = "")
 
 
