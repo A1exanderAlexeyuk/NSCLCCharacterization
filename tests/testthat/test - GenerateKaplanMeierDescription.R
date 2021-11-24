@@ -153,5 +153,5 @@ test_that("generateTimeToTreatmenInitiationStatistics", {
                                                                          cohortTable = cohortTable,# treatment initiation
                                                                           databaseId = databaseId)
   testthat::expect_s3_class(t, "data.frame")
-  expect_true(dim(t)[[1]]>0)
+  expect_true(dim(t)[[1]] > 0)
 })

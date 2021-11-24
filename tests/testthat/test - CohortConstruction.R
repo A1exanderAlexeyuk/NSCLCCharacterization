@@ -2,18 +2,18 @@ library(testthat)
 library(DatabaseConnector)
 library(SqlRender)
 library(lubridate)
-cohortDatabaseSchema <- 'regimen_stats_schema'
-cohortTable <- 'construct_test'
-databaseId <- "testDatabaseId"
-packageName <- "NSCLCCharacterization"
+
 test_that("Create Cohort Table", {
-  connectionDetails <- DatabaseConnector::createConnectionDetails(
+  cohortDatabaseSchema <- 'alex_alexeyuk_results'
+  cohortTable <- 'construct_test'
+  databaseId <- "testDatabaseId"
+  packageName <- "NSCLCCharacterization"
+  connectionDetails <- createConnectionDetails(
     dbms = "postgresql",
-    server = Sys.getenv("postgres_local_server"),
-    port = "5432",
-    connectionString = Sys.getenv("postgres_local_conn_string"),
-    user = "postgres",
-    password = Sys.getenv("postgres_local_password")
+    server = "testnode.arachnenetwork.com/synpuf_110k",
+    user = "ohdsi",
+    password = "ohdsi",
+    port = "5441"
   )
   conn <- connect(connectionDetails = connectionDetails)
 
@@ -30,7 +30,7 @@ test_that("Create Cohort Table", {
     connection = conn,
     cohortDatabaseSchema = cohortDatabaseSchema,
     cohortTable = cohortTable,
-    resultsDatabaseSchema = cohortDatabaseSchema,
+    resultsDatabaseSchema = cohortDatabaseSchema
   )
 
   expect_error(renderTranslateExecuteSql(

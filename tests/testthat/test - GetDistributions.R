@@ -47,4 +47,19 @@ test_that("Get Distributions", {
 
  expect_true(nrow(test)>0)
 
+
+    pathToSql <- system.file("sql",
+                             "sql_server",
+                             "distributions",
+                             "RemoveComplementaryTables.sql",
+                             package = packageName
+    )
+    sql <- readChar(pathToSql, file.info(pathToSql)$size)
+expect_error(
+
+    DatabaseConnector::renderTranslateExecuteSql(connection,
+                                                 sql = sql,
+                                                 cohort_database_schema = cohortDatabaseSchema
+    ),
+    NA)
 })
