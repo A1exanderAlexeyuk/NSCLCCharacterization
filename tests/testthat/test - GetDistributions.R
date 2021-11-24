@@ -1,74 +1,50 @@
 library(testthat)
 library(DatabaseConnector)
 library(SqlRender)
-resultsDatabaseSchema <- Sys.getenv("testresultsDatabaseSchema")
-cdmDatabaseSchema <- Sys.getenv("testcdmDatabaseSchema")
-cohortDatabaseSchema <- resultsDatabaseSchema
-cohortTable <- Sys.getenv("testcohortTable")
+resultsDatabaseSchema <- "alex_alexeyuk_results"
+cdmDatabaseSchema <- "cdm_531"
+cohortDatabaseSchema <- "alex_alexeyuk_results"
 databaseId <- "testDatabaseId"
-
+packageName <- "NSCLCCharacterization"
 test_that("Get Distributions", {
   connectionDetails <- createConnectionDetails(
     dbms = "postgresql",
-    server = Sys.getenv("testserver"),
-    user = Sys.getenv("testuser"),
-    password = Sys.getenv("testuser"),
-    port = Sys.getenv("testport")
+    server = "testnode.arachnenetwork.com/synpuf_110k",
+    user = "ohdsi",
+    password = "ohdsi",
+    port = "5441"
   )
-  connection <- connect(connectionDetails = connectionDetails)
-
+  conn <- connect(connectionDetails = connectionDetails)
 
   # prepare necessary tables
   targetIdsFormatted <- c(101, 102, 103)
+  # prepare necessary tables
   pathToSql <- system.file("sql", "sql_server",
-    "distributions", "IQRComplementaryTables.sql",
-    package = getThisPackageName()
+                           "distributions", "IQRComplementaryTables.sql",
+                           package = packageName
   )
 
   sql <- readChar(pathToSql, file.info(pathToSql)$size)
-  DatabaseConnector::renderTranslateExecuteSql(
-    connection = connection,
-    sql = sql,
-    cdmDatabaseSchema = cdmDatabaseSchema,
-    cohortDatabaseSchema = cohortDatabaseSchema,
-    cohortTable = cohortTable,
-    targetIds = targetIdsFormatted
+
+  DatabaseConnector::renderTranslateExecuteSql(conn,
+                                               sql = sql,
+                                               cdmDatabaseSchema = cdmDatabaseSchema,
+                                               cohortDatabaseSchema = cohortDatabaseSchema,
+                                               cohortTable = "union_table",
+                                               targetIds = targetIdsFormatted
   )
 
+  test <- getAtEventDistribution(connection = conn,
+                                     cohortDatabaseSchema = cohortDatabaseSchema,
+                                     cdmDatabaseSchema,
+                                     cohortTable = "union_table",
+                                     targetIds = targetIdsFormatted,
+                                     databaseId = databaseId,
+                                     packageName = packageName,
+                                     analysisName = 'AgeAtIndex')
 
-  metricsDistribution <- data.frame()
-  DistribAnalyses <- c(
-    "AgeAtIndex",
-    "CharlsonAtIndex",
-    "NeutrophilToLymphocyteRatioAtIndex",
-    "PDLAtIndex",
-    "PlateletToLymphocyteRatioAtIndex"
-  )
-  for (analysis in DistribAnalyses) {
-    result <- getAtEventDistribution(
-      connection = connection,
-      cohortDatabaseSchema = cohortDatabaseSchema,
-      cdmDatabaseSchema = cdmDatabaseSchema,
-      cohortTable = cohortTable,
-      targetIds = targetIdsFormatted,
-      databaseId = databaseId,
-      packageName = getThisPackageName(),
-      analysisName = analysis
-    )
-    metricsDistribution <- rbind(metricsDistribution, result)
-  }
+ expect_s3_class(test, "data.frame")
 
-  expect_s3_class(metricsDistribution, "data.frame")
+ expect_true(nrow(test)>0)
 
-  pathToSql <- system.file("sql",
-    "sql_server",
-    "distributions",
-    "RemoveComplementaryTables.sql",
-    package = getThisPackageName()
-  )
-  sql <- readChar(pathToSql, file.info(pathToSql)$size)
-  expect_error(DatabaseConnector::renderTranslateExecuteSql(connection,
-    sql = sql,
-    cohortDatabaseSchema = cohortDatabaseSchema
-  ), NA)
 })
