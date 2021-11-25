@@ -21,9 +21,9 @@ with temp_ as (select DISTINCT c.cohort_definition_id,
 
 
 temp_0 as(
-        select  cohort_definition_id, person_id_ as person_id, cohort_start_date, regimen_start_date,
+        select distinct  cohort_definition_id, person_id_ as person_id, cohort_start_date, regimen_start_date,
           coalesce(regimen_end_date, cohort_end_date,observation_period_end_date,
-          death_date ) as  regimen_end_date,
+          death_date) as  regimen_end_date,
           regimen, observation_period_end_date, death_date , cohort_end_date,
           ingredient_end_date, ingredient_start_date
         	from temp_ ORDER BY 1,2,3,4
@@ -66,7 +66,7 @@ from t3
  ),
 
 t5 as (
-	select cohort_definition_id, person_id,
+	select  cohort_definition_id, person_id,
 	regimen_start_date,regimen_end_date, death_date, regimen,
 	count(Line_of_therapy) over
 	(partition by person_id order by regimen_start_date)
@@ -76,7 +76,7 @@ t5 as (
 	order by 2,3
 ),
 
-temp_2 as (select distinct  cohort_definition_id,
+temp_2 as (select   cohort_definition_id,
 	person_id,Line_of_therapy,regimen,
 	min(regimen_start_date) over
 	(partition by cohort_definition_id, person_id, Line_of_therapy)
@@ -96,7 +96,7 @@ temp_3 as (SELECT cohort_definition_id,
        regimen_end_date,
 
 	   case when lead(regimen_start_date, 1) over (PARTITION BY cohort_definition_id,
-      	person_id order by person_id) - regimen_end_date < 0 then NULL
+      	person_id order by person_id) - regimen_end_date <= 0 then NULL
 	   else lead(regimen_start_date, 1) over (PARTITION BY cohort_definition_id,
       	person_id order by person_id) - regimen_end_date end
 			            as Treatment_free_Interval,

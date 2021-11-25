@@ -7,6 +7,7 @@ WITH init_data AS (
                   FROM @cohortDatabaseSchema.@regimenStatsTable
                   WHERE line_of_therapy < 3
                   AND cohort_definition_id IN (@targetId)
+                  AND Time_to_Treatment_Discontinuation IS NOT NULL
                   )
 
 
