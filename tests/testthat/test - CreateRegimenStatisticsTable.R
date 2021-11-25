@@ -15,7 +15,7 @@ test_that("Create Regimen Statistics", {
   cdmDatabaseSchema = "regimen_stats_schema"
   writeDatabaseSchema = "regimen_stats_schema"
   regimenIngredientsTable <- "regimeningredienttable"
-  regimenStatsTable <- "regimenStatsTable"
+  regimenStatsTable <- "regimenStatsTable1"
   cohortTable = "ct"
   expect_error(NSCLCCharacterization::createRegimenStats(
     connectionDetails = connectionDetails,
@@ -27,7 +27,7 @@ test_that("Create Regimen Statistics", {
     gapBetweenTreatment = 120
   ), NA)
 
-  t <- DatabaseConnector::renderTranslateQuerySql(connection = conn,
+  test <- DatabaseConnector::renderTranslateQuerySql(connection = conn,
                                                   sql = "SELECT * FROM @writeDatabaseSchema.@regimenStatsTable",
                                                   writeDatabaseSchema = writeDatabaseSchema,
                                                   regimenStatsTable = regimenStatsTable,
