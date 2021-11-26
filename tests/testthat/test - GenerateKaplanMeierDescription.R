@@ -40,6 +40,7 @@ test_that("Survival test", {
 
 
 
+# !!Test passed
 test_that("generateKaplanMeierDescriptionTFI", {
   # locally
   cohortDatabaseSchema <- "regimen_stats_schema"
@@ -68,6 +69,7 @@ test_that("generateKaplanMeierDescriptionTFI", {
 })
 
 
+# !!Test passed
 test_that("generateKaplanMeierDescriptionTFI", {
   # locally
   cohortDatabaseSchema <- "regimen_stats_schema"
@@ -98,6 +100,7 @@ test_that("generateKaplanMeierDescriptionTFI", {
 
 
 
+# !!!Test passed
 test_that("generateKaplanMeierDescriptionTNT", {
   cohortDatabaseSchema <- "regimen_stats_schema"
   regimenStatsTable <- "rstF3"
@@ -152,3 +155,4 @@ test_that("generateTimeToTreatmenInitiationStatistics", {
   testthat::expect_s3_class(t, "data.frame")
   expect_true(dim(t)[[1]] > 0)
 })
+
