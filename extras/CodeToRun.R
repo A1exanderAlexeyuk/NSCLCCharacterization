@@ -59,6 +59,15 @@ devtools::install_github("A1exanderAlexeyuk/NSCLCCharacterization")
 # *******************************************************
 # SECTION 2: Running the package ---------------------------------------------------------------
 # *******************************************************
+devtools::install_github("OHDSI/DatabaseConnector")
+library(DatabaseConnector)
+devtools::install_github("OHDSI/SqlRender")
+library(SqlRender)
+devtools::install_github("A1exanderAlexeyuk/NSCLCCharacterization")
+library(NSCLCCharacterization)
+devtools::install_github("A1exanderAlexeyuk/OncologyRegimenFinder")
+library(OncologyRegimenFinder)
+
 source('SankeyPlot.R')
 library(NSCLCCharacterization)
 
@@ -84,9 +93,6 @@ connectionDetails <- DatabaseConnector::createConnectionDetails(dbms = dbms,
                                                                 port = port,
                                                                 connectionString = connectionString,
                                                                 pathToDriver = pathToDriver)
-
-
-
 # For Oracle: define a schema that can be used to emulate temp tables:
 tempEmulationSchema <- NULL
 
@@ -183,7 +189,6 @@ runStudy(connectionDetails,
          cohortDatabaseSchema,
          cohortStagingTable,
          cohortTable,
-         featureSummaryTable,
          regimenIngredientsTable,
          createRegimenStats = TRUE,
          gapBetweenTreatment,
