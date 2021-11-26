@@ -31,7 +31,6 @@ Please review the questions below, and if that doesn't answer it consider filing
 #### *I don't understand the organization of this Github Repo.*
 The study repo has the following major pieces:
 - `R` folder = the folder which will provide the R library the scripts it needs to execute this study
-- `documents` folder = the folder where you will find study documents (protocols, 1-sliders to explain the study, etc)
 - `extras` folder = the folder where we store a copy of the instructions (called `CodeToRun.R`) below and other files that the study needs to do things like package maintenance or talk with the Shiny app. Aside from `CodeToRun.R`, you can largely ignore the rest of these files.
 - `inst` folder = This is the "install" folder. It contains the most important parts of the study: the study cohort JSONs (analogous to what ATLAS shows you in the Export tab), the study settings, a sub-folder that contains information to the Shiny app, and the study cohort SQL scripts that [SqlRender](https://cran.r-project.org/web/packages/SqlRender/index.html) will use to translate these into your RDBMS.
 
