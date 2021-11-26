@@ -5,7 +5,6 @@
 - Study type: **Clinical Application**
 - Tags: **cancer**
 - Protocol: **[NSCLCCharacterization](https://github.com/A1exanderAlexeyuk/NSCLCCharacterization/blob/main/NSCLCCharacterization.docx)**
-- Protocol 
 - Study start date: **October 25, 2021**
 - Study end date: **-**
 
