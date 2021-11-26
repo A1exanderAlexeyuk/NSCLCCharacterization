@@ -4,6 +4,7 @@
 - Analytics use case(s): **Characterization**
 - Study type: **Clinical Application**
 - Tags: **cancer**
+- Protocol https://github.com/A1exanderAlexeyuk/NSCLCCharacterization/blob/main/NSCLCCharacterization.docx [link.com]
 - Study start date: **October 25, 2021**
 - Study end date: **-**
 
