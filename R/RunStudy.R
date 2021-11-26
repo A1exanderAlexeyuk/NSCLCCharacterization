@@ -8,7 +8,6 @@ runStudy <- function(connectionDetails,
                      writeDatabaseSchema,
                      cohortStagingTable = "cohort_stg",
                      cohortTable = "cohort",
-                     featureSummaryTable = "cohort_smry",
                      cohortIdsToExcludeFromExecution = c(),
                      cohortIdsToExcludeFromResultsExport = NULL,
                      regimenIngredientsTable = regimenIngredientsTable,
@@ -68,9 +67,6 @@ runStudy <- function(connectionDetails,
     }
 
     # Generate categorized regimens  info -----------------------------------------------------------------
-
-
-
     ParallelLogger::logInfo("Generating regimen categories")
     categorizedRegimens <- createCategorizedRegimensTable(
       connectionDetails = connectionDetails,
@@ -88,7 +84,6 @@ runStudy <- function(connectionDetails,
   # Generate survival info -----------------------------------------------------------------
 
   ParallelLogger::logInfo("Generating survival info")
-
 
   KMOutcomes <- getFeatures()
   KMOutcomesIds <- KMOutcomes$cohortId[1]
