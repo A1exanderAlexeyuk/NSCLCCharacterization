@@ -243,7 +243,6 @@ runStudy(connectionDetails,
          cohortDatabaseSchema,
          cohortStagingTable,
          cohortTable,
-         featureSummaryTable,
          regimenIngredientsTable,
          createRegimenStats = TRUE,
          gapBetweenTreatment,
@@ -261,3 +260,15 @@ preMergeResultsFiles(outputFolder)
 # When finished with reviewing the results, use the next command
 # upload study results to OHDSI SFTP server:
 uploadStudyResults(outputFolder, keyFileName, userName)
+
+
+source("extras/SankeyPlot.R")
+# categorizedRegimensInfo - csv file what will be created after RunStudy
+# cohortDefinitionId - 101 or 102 or 103
+#output - sankey plot
+createSankeyPlot(
+  categorizedRegimensInfo,
+  cohortDefinitionId
+)
+
+
