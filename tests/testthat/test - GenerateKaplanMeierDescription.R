@@ -40,7 +40,6 @@ test_that("Survival test", {
 
 
 
-# !!Test passed
 test_that("generateKaplanMeierDescriptionTFI", {
   # locally
   cohortDatabaseSchema <- "regimen_stats_schema"
@@ -69,7 +68,6 @@ test_that("generateKaplanMeierDescriptionTFI", {
 })
 
 
-# !!Test passed
 test_that("generateKaplanMeierDescriptionTFI", {
   # locally
   cohortDatabaseSchema <- "regimen_stats_schema"
@@ -100,7 +98,6 @@ test_that("generateKaplanMeierDescriptionTFI", {
 
 
 
-# !!!Test passed
 test_that("generateKaplanMeierDescriptionTNT", {
   cohortDatabaseSchema <- "regimen_stats_schema"
   regimenStatsTable <- "rstF3"
