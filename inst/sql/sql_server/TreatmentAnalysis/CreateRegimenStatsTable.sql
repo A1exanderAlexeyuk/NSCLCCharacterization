@@ -1,6 +1,30 @@
 DROP TABLE IF
 EXISTS @cohortDatabaseSchema.@regimenStatsTable;
 
+CREATE table @cohortDatabaseSchema.@regimenStatsTable (
+             cohort_definition_id int,
+             person_id bigint,
+             Line_of_therapy int,
+             regimen varchar(256),
+             regimen_start_date date,
+             regimen_end_date date,
+             Treatment_free_Interval int,
+             Time_to_Treatment_Discontinuation int,
+             Time_to_Time_to_Next_Treatment int
+);
+
+INSERT INTO @cohortDatabaseSchema.@regimenStatsTable (
+             cohort_definition_id,
+             person_id,
+             Line_of_therapy,
+             regimen,
+             regimen_start_date,
+             regimen_end_date,
+             Treatment_free_Interval,
+             Time_to_Treatment_Discontinuation,
+             Time_to_Time_to_Next_Treatment
+)
+
 with temp_ as (SELECT DISTINCT c.cohort_definition_id,
                 c.subject_id as person_id_,
                 c.cohort_start_date, c.cohort_end_date,
@@ -105,6 +129,8 @@ temp_6 as (
       	   else lead(regimen_start_date, 1) over (PARTITION BY cohort_definition_id,
             	person_id order by person_id) - regimen_end_date end
       			            as Treatment_free_Interval,
+
+
       	CASE WHEN lead(regimen_start_date, 1) over (PARTITION BY
       	               cohort_definition_id,	person_id
       	               order by cohort_definition_id,
@@ -114,6 +140,7 @@ temp_6 as (
       							   order by cohort_definition_id,person_id) IS NULL
       							   then abs(regimen_start_date - regimen_end_date)
       							   end as Time_to_Treatment_Discontinuation,
+
       	CASE WHEN Line_of_therapy = 1 AND
       	  lead(regimen_start_date, 1) over (PARTITION BY cohort_definition_id, person_id
       	order by cohort_definition_id, person_id) IS NOT NULL AND
@@ -126,8 +153,6 @@ temp_6 as (
       FROM temp_5
       order by  cohort_definition_id, person_id, regimen_start_date, Line_of_therapy)
 
-
 SELECT *
-INTO @cohortDatabaseSchema.@regimenStatsTable
 FROM temp_6 order by 1,2,3,5
 
