@@ -119,8 +119,7 @@ keyFileName <- "your-home-folder-here/.ssh/study-data-site-NSCLC"
 userName <- "study-data-site-NSCLC"
 
 # Run cohort diagnostics -----------------------------------
-NSCLCCharacterization::runCohortDiagnostics(
-  connection,
+NSCLCCharacterization::runCohortDiagnostics <- function(
   connectionDetails,
   cdmDatabaseSchema,
   cohortDatabaseSchema,
@@ -133,7 +132,6 @@ NSCLCCharacterization::runCohortDiagnostics(
   databaseDescription = "Unknown",
   cohortStagingTable
 )
-
 
 # To view the results:
 # Optional: if there are results zip files from multiple sites in a folder, this merges them, which will speed up starting the viewer:
@@ -159,7 +157,7 @@ library(OncologyRegimenFinder)
 writeDatabaseSchema <- "your_schema_to_write" # should be the same as cohortDatabaseSchema
 cdmDatabaseSchema <- "cdm_schema"
 vocabularyTable <- "vocabulary_table"
-cohortTable <- "cohort_table"
+regimenCohortTable <- "cohort_table"
 regimenTable <- "regimen_table"
 regimenIngredientsTable <- "name_of_your_regimen_stats_table" #sql db an output on OncologyRegimenFinder
 gapBetweenTreatment <- 120 # specify gap between lines what will be used as a difinition on TTD
@@ -167,7 +165,7 @@ dateLagInput <- 30
 OncologyRegimenFinder::createRegimens(connectionDetails,
                                       cdmDatabaseSchema,
                                       writeDatabaseSchema,
-                                      cohortTable,
+                                      cohortTable = regimenCohortTable, # to avoid overwriting of cohortTable name
                                       rawEventTable,
                                       regimenTable,
                                       regimenIngredientTable,
@@ -178,11 +176,11 @@ OncologyRegimenFinder::createRegimens(connectionDetails,
                                       generateRawEvents = FALSE
 )
 
-
 # Use this to run the study. The results will be stored in a zip file called
 # 'Results_<databaseId>.zip in the outputFolder.
+regimenStatsTable <- "regimen_stats_table"
+
 runStudy(connectionDetails,
-         connection,
          cdmDatabaseSchema,
          writeDatabaseSchema,
          tempEmulationSchema,
@@ -190,18 +188,16 @@ runStudy(connectionDetails,
          cohortStagingTable,
          cohortTable,
          regimenIngredientsTable,
-         createRegimenStats = TRUE,
-         gapBetweenTreatment,
-         exportFolder = outputFolder,
+         createRegimenStats = F,
+         gapBetweenTreatment = 120,
+         createCategorizedRegimensTable = T,
+         regimenStatsTable,
+         exportFolder,
          databaseId,
          databaseName,
          dropRegimenStatsTable = FALSE, # optional - drop created table
-         databaseDescription = "")
+         databaseDescription)
 
-
-# Use the next set of commands to compress results
-# and view the output.
-preMergeResultsFiles(outputFolder)
 
 # When finished with reviewing the results, use the next command
 # upload study results to OHDSI SFTP server:
@@ -214,6 +210,10 @@ createSankeyPlot(
   categorizedRegimensInfo,
   cohortDefinitionId
 )
+
+
+
+
 
 
 
