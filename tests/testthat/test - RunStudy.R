@@ -19,9 +19,7 @@ test_that("Run Study!!!", {
     port = "5441"
   )
   conn <- connect(connectionDetails = connectionDetails)
-
   expect_error(NSCLCCharacterization::runStudy(connectionDetails = connectionDetails,
-                                               connection = conn,
                                                cdmDatabaseSchema = cdmDatabaseSchema,
                                                writeDatabaseSchema = cohortDatabaseSchema,
                                                tempEmulationSchema = NULL,
@@ -31,6 +29,7 @@ test_that("Run Study!!!", {
                                                regimenIngredientsTable = "regimeningredienttable_voc",
                                                createRegimenStats = F,
                                                gapBetweenTreatment=120,
+                                               createCategorizedRegimensTable = T,
                                                regimenStatsTable = 'test_rst',
                                                exportFolder = outputFolder,
                                                databaseId=databaseId,

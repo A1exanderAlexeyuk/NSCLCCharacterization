@@ -14,7 +14,7 @@ test_that("Survival test", {
                                                    port = "5432",
                                                    connectionString = "jdbc:postgresql://localhost:5432/postgres",
                                                    user = "postgres",
-                                                   password = "sql",
+                                                   password = Sys.getenv("postgres_local_password")
   )
   conn <- connect(connectionDetails = connectionDetails)
   targetIds <- c(101,102)
@@ -53,7 +53,7 @@ test_that("generateKaplanMeierDescriptionTFI", {
     port = "5432",
     connectionString = "jdbc:postgresql://localhost:5432/postgres",
     user = "postgres",
-    password = "sql",
+    password = Sys.getenv("postgres_local_password"),
     pathToDriver = Sys.getenv("DATABASECONNECTOR_JAR_FOLDER")
   )
   conn <- connect(connectionDetails = connectionDetails)
@@ -70,7 +70,7 @@ test_that("generateKaplanMeierDescriptionTFI", {
 
 
 # !!Test passed
-test_that("generateKaplanMeierDescriptionTFI", {
+test_that("generateKaplanMeierDescriptionTTD", {
   # locally
   cohortDatabaseSchema <- "regimen_stats_schema"
   regimenStatsTable <- "rstF3"
@@ -82,7 +82,7 @@ test_that("generateKaplanMeierDescriptionTFI", {
     port = "5432",
     connectionString = "jdbc:postgresql://localhost:5432/postgres",
     user = "postgres",
-    password = "sql",
+    password = Sys.getenv("postgres_local_password"),
     pathToDriver = Sys.getenv("DATABASECONNECTOR_JAR_FOLDER")
   )
   conn <- connect(connectionDetails = connectionDetails)
@@ -112,7 +112,7 @@ test_that("generateKaplanMeierDescriptionTNT", {
     port = "5432",
     connectionString = "jdbc:postgresql://localhost:5432/postgres",
     user = "postgres",
-    password = "sql",
+    password = Sys.getenv("postgres_local_password"),
     pathToDriver = Sys.getenv("DATABASECONNECTOR_JAR_FOLDER")
   )
   conn <- connect(connectionDetails = connectionDetails)
@@ -142,7 +142,7 @@ test_that("generateTimeToTreatmenInitiationStatistics", {
     port = "5432",
     connectionString = "jdbc:postgresql://localhost:5432/postgres",
     user = "postgres",
-    password = "sql",
+    password = Sys.getenv("postgres_local_password"),
     pathToDriver = Sys.getenv("DATABASECONNECTOR_JAR_FOLDER")
   )
   conn <- connect(connectionDetails = connectionDetails)

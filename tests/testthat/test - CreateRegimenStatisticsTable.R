@@ -12,11 +12,11 @@ test_that("Create Regimen Statistics", {
     password = Sys.getenv("postgres_local_password")
     )
   conn <- connect(connectionDetails = connectionDetails)
-  cdmDatabaseSchema = "regimen_stats_schema"
-  writeDatabaseSchema = "regimen_stats_schema"
-  regimenIngredientsTable <- "regimeningredienttable"
-  regimenStatsTable <- "regimenStatsTable1"
-  cohortTable = "ct"
+  cdmDatabaseSchema = "bigquery"
+  writeDatabaseSchema = "bigquery"
+  regimenIngredientsTable <- "out_new"
+  regimenStatsTable <- "rst_test"
+  cohortTable = "cohort_table"
   expect_error(NSCLCCharacterization::createRegimenStats(
     connectionDetails = connectionDetails,
     cdmDatabaseSchema = cdmDatabaseSchema,
@@ -41,11 +41,12 @@ test_that("Create Regimen Statistics", {
 
 
 test_that("Create Regimen Categories", {
-  cdmDatabaseSchema = "regimen_stats_schema"
-  writeDatabaseSchema = "regimen_stats_schema"
+  cdmDatabaseSchema = "bigquery"
+  writeDatabaseSchema = "bigquery"
   cohortDatabaseSchema = writeDatabaseSchema
-  regimenIngredientsTable <- "regimeningredienttable"
-  regimenStatsTable <- "regimenStatsTable"
+  regimenIngredientsTable <- "out_new"
+  regimenStatsTable <- "rst_test"
+  cohortTable = "cohort_table"
   connectionDetails <- DatabaseConnector::createConnectionDetails(
     dbms = "postgresql",
     server = Sys.getenv("postgres_local_server"),
@@ -61,10 +62,12 @@ test_that("Create Regimen Categories", {
     regimenStatsTable = regimenStatsTable,
     targetIds = 1
   )
+
   expect_s3_class(t, "data.frame")
 
   expect_true(dim(t)[[1]] > 0)
 
+  expect_error(readr::write_csv(t, 'categorized_regimens.csv'), NA)
 
 })
 

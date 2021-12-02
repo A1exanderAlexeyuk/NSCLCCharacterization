@@ -14,8 +14,8 @@ test_that("Cohort Diagnostics", {
   connectionDetails <- createConnectionDetails(
     dbms = "postgresql",
     server = "testnode.arachnenetwork.com/synpuf_110k",
-    user = "ohdsi",
-    password = "ohdsi",
+    user = Sys.getenv("ohdsi_password"),
+    password = Sys.getenv("ohdsi_password"),
     port = "5441"
   )
   conn <- connect(connectionDetails = connectionDetails)
