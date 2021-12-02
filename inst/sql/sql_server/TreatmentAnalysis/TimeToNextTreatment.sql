@@ -6,7 +6,7 @@ WITH init_data AS (
                   Time_to_Next_Treatment as time_to_event
                   FROM @cohortDatabaseSchema.@regimenStatsTable
                   WHERE cohort_definition_id IN (@targetId)
-                  AND Line_of_therapy > 1
+                  AND Time_to_Next_Treatment IS NOT NULL
                   )
 
 
