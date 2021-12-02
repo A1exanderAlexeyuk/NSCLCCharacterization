@@ -14,10 +14,10 @@ generateSurvival <- function(connection,
 
   survOutputs <- purrr::map_dfr(targetIds, function(targetId) {
     sqlTmp <- SqlRender::render(sql,
-      cohort_database_schema = cohortDatabaseSchema,
-      cohort_table = cohortTable,
-      outcome_id = outcomeId,
-      target_id = targetId
+                                cohort_database_schema = cohortDatabaseSchema,
+                                cohort_table = cohortTable,
+                                outcome_id = outcomeId,
+                                target_id = targetId
     )
     sqlTmp <- SqlRender::translate(
       sql = sqlTmp,
@@ -72,8 +72,8 @@ generateKaplanMeierDescriptionTNT <- function(connection,
   packageName <- getThisPackageName()
   sqlFileName <- "TimeToNextTreatment.sql"
   pathToSql <- system.file("sql", "sql_server", "TreatmentAnalysis",
-    sqlFileName,
-    package = packageName
+                           sqlFileName,
+                           package = packageName
   )
 
   sql <- readChar(pathToSql, file.info(pathToSql)$size)
@@ -97,9 +97,13 @@ generateKaplanMeierDescriptionTNT <- function(connection,
       snakeCaseToCamelCase = T
     ))
 
-    survInfo <- survival::survfit(survival::Surv(timeToEvent, event) ~ 1,
-      data = km_proc
-    )
+    if(nrow(km_proc) < 100 | length(km_proc$event[km_proc$event == 1]) < 1){
+      return(NULL)
+    }
+
+        survInfo <- survival::survfit(survival::Surv(timeToEvent, event) ~ 1,
+                                  data = km_proc
+                                  )
 
 
     survInfo <- survminer::surv_summary(survInfo)
@@ -128,12 +132,12 @@ generateKaplanMeierDescriptionTFI <- function(connection,
   packageName <- getThisPackageName()
   sqlFileName <- "TreatmentFreeInterval.sql"
   pathToSql <- system.file("sql", "sql_server", "TreatmentAnalysis",
-    sqlFileName,
-    package = packageName
+                           sqlFileName,
+                           package = packageName
   )
   sql <- readChar(pathToSql, file.info(pathToSql)$size)
 
-  linesTreatmentOutput <- purrr::map_df(targetIds, function(targetId) {
+  linesTreatmentOutput <- purrr::map_dfr(targetIds, function(targetId) {
     sqlRendered <- SqlRender::render(
       sql = sql,
       cohortDatabaseSchema = cohortDatabaseSchema,
@@ -151,6 +155,10 @@ generateKaplanMeierDescriptionTFI <- function(connection,
       sql = sqlTmp,
       snakeCaseToCamelCase = T
     ))
+
+    if(nrow(km_proc) < 100 | length(km_proc$event[km_proc$event == 1]) < 1){
+      return(NULL)
+    }
 
     km_proc_2 <- km_proc %>%
       tidyr::nest(data = !lineOfTherapy) %>%
@@ -197,8 +205,8 @@ generateKaplanMeierDescriptionTTD <- function(connection,
   packageName <- getThisPackageName()
   sqlFileName <- "TimeToTreatmentDiscontinuation.sql"
   pathToSql <- system.file("sql", "sql_server", "TreatmentAnalysis",
-    sqlFileName,
-    package = packageName
+                           sqlFileName,
+                           package = packageName
   )
   sql <- readChar(pathToSql, file.info(pathToSql)$size)
 
@@ -220,6 +228,10 @@ generateKaplanMeierDescriptionTTD <- function(connection,
       sql = sqlTmp,
       snakeCaseToCamelCase = T
     ))
+
+    if(nrow(km_proc) < 100 | length(km_proc$event[km_proc$event == 1]) < 1){
+      return(NULL)
+    }
 
     km_proc_2 <- km_proc %>%
       tidyr::nest(data = !lineOfTherapy) %>%

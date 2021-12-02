@@ -1,6 +1,6 @@
 #' @export
 runStudy <- function(connectionDetails,
-                     connection,
+                     connection  = NULL,
                      cdmDatabaseSchema,
                      tempEmulationSchema = NULL,
                      oracleDatabaseSchema = NULL,
@@ -12,6 +12,7 @@ runStudy <- function(connectionDetails,
                      cohortIdsToExcludeFromResultsExport = NULL,
                      regimenIngredientsTable = regimenIngredientsTable,
                      createRegimenStats = TRUE,
+                     regimenStatsTable = 'default_rst',
                      dropRegimenStatsTable = FALSE,
                      exportFolder,
                      databaseId,
@@ -53,7 +54,7 @@ runStudy <- function(connectionDetails,
   # Generate  regimen stats table -----------------------------------------------------------------
   if (createRegimenStats) {
     if (!is.null(regimenIngredientsTable)) {
-      createRegimenStatsTable <- createcreateRegimenStats(
+      createRegimenStats(
         connectionDetails = connectionDetails,
         cdmDatabaseSchema = cdmDatabaseSchema,
         writeDatabaseSchema = writeDatabaseSchema,
@@ -92,7 +93,7 @@ runStudy <- function(connectionDetails,
     cohortDatabaseSchema = cohortDatabaseSchema,
     cohortTable = cohortStagingTable,
     targetIds = targetIdsTreatmentIndex,
-    outcomeIds = KMOutcomesIds,
+    outcomeId = KMOutcomesIds,
     databaseId = databaseId,
     packageName = getThisPackageName()
   )
@@ -204,7 +205,7 @@ runStudy <- function(connectionDetails,
       cohortDatabaseSchema = cohortDatabaseSchema,
       cdmDatabaseSchema = cdmDatabaseSchema,
       cohortTable = cohortStagingTable,
-      targetIds = targetIds,
+      targetIds = targetIdsTreatmentIndex,
       databaseId = databaseId,
       packageName = getThisPackageName(),
       analysisName = analysis
@@ -228,7 +229,7 @@ runStudy <- function(connectionDetails,
   sql <- readChar(pathToSql, file.info(pathToSql)$size)
   DatabaseConnector::renderTranslateExecuteSql(connection,
                                                sql = sql,
-                                               cohort_database_schema = cohortDatabaseSchema
+                                               cohortDatabaseSchema = cohortDatabaseSchema
   )
 
 

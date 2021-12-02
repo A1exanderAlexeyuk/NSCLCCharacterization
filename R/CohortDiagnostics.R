@@ -36,8 +36,8 @@
 #' @param runCohortCharacterization   Generate and export the cohort characterization?
 #'
 #' @export
-runCohortDiagnostics <- function(connection,
-                                 connectionDetails,
+runCohortDiagnostics <- function(connectionDetails,
+                                 connection = NULL,
                                  cdmDatabaseSchema,
                                  cohortDatabaseSchema = cdmDatabaseSchema,
                                  cohortTable = "cohort",
@@ -64,6 +64,10 @@ runCohortDiagnostics <- function(connection,
                                  runCohortCharacterization = TRUE,
                                  cohortIdsToExcludeFromExecution = NULL,
                                  cohortGroups = getUserSelectableCohortGroups()) {
+  if (is.null(connection)) {
+    connection <- DatabaseConnector::connect(connectionDetails)
+    on.exit(DatabaseConnector::disconnect(connection))
+  }
   if (!file.exists(outputFolder)) {
     dir.create(outputFolder, recursive = TRUE)
   }
