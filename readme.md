@@ -183,6 +183,7 @@ userName <- "study-data-site-NSCLC"
 # Run cohort diagnostics -----------------------------------
 NSCLCCharacterization::runCohortDiagnostics(
   connectionDetails,
+  connection,
   cdmDatabaseSchema,
   cohortDatabaseSchema,
   createCohorts = TRUE,
@@ -245,6 +246,7 @@ OncologyRegimenFinder::createRegimens(connectionDetails,
 regimenStatsTable <- "regimen_stats_table"
 
 runStudy(connectionDetails,
+         connection,
          cdmDatabaseSchema,
          tempEmulationSchema = NULL,
          cohortDatabaseSchema,
