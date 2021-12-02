@@ -10,7 +10,7 @@ CREATE table @cohortDatabaseSchema.@regimenStatsTable (
              regimen_end_date date,
              Treatment_free_Interval int,
              Time_to_Treatment_Discontinuation int,
-             Time_to_Time_to_Next_Treatment int
+             Time_to_Next_Treatment int
 );
 
 INSERT INTO @cohortDatabaseSchema.@regimenStatsTable (
@@ -22,7 +22,7 @@ INSERT INTO @cohortDatabaseSchema.@regimenStatsTable (
              regimen_end_date,
              Treatment_free_Interval,
              Time_to_Treatment_Discontinuation,
-             Time_to_Time_to_Next_Treatment
+             Time_to_Next_Treatment
 )
 
 with temp_ as (SELECT DISTINCT c.cohort_definition_id,

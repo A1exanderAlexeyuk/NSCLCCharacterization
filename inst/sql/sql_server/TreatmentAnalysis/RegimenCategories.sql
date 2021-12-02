@@ -9,14 +9,14 @@ WITH cte AS (SELECT cohort_definition_id,
                     person_id,
                     Line_of_therapy,
                     regimen,
-                    (case when regimen in ('erlotinib',
+                    (CASE WHEN regimen in ('erlotinib',
                                           'gefitinib',
                                           'afatinib',
                                           'dacomitinib',
                                           'osimertinib')
                             then 1 else 0 end) AS EGFR_tyrosine_kinase_inhibitors,
 
-                    (case when regimen in ('crizotinib', 'ceritinib',
+                    (CASE WHEN regimen in ('crizotinib', 'ceritinib',
                               'brigatinib', 'alectinib',
                               'lorlatinib', 'entrectinib',
                               'capmatinib', 'selpercatinib',
@@ -25,21 +25,21 @@ WITH cte AS (SELECT cohort_definition_id,
                               'larotrectinib') OR regimen like ('%dabrafenib%trametinib%')
                           then 1 else 0 end) AS Other_EGFR_tyrosine_kinase_inhibitors,
 
-                   ( case when regimen in ('pembrolizumab', 'nivolumab', 'dostarlimab') then 1
+                   ( CASE WHEN regimen in ('pembrolizumab', 'nivolumab', 'dostarlimab') then 1
                           else 0 end) AS Anti_PD_1,
 
-                    (case  when regimen in ('atezolizumab', 'avelumab', 'durvalumab') then 1
+                    (CASE  WHEN regimen in ('atezolizumab', 'avelumab', 'durvalumab') then 1
                           else 0 end) AS Anti_L_1,
 
-                    (case when regimen in ('ipilimumab') then 1 else 0 end) AS Anti_CTLA_4,
+                    (CASE WHEN regimen in ('ipilimumab') then 1 else 0 end) AS Anti_CTLA_4,
 
-                    (case  when regimen in ('cisplatin', 'carboplatin') then 1
+                    (CASE  WHEN regimen in ('cisplatin', 'carboplatin') then 1
                           else 0 end) AS Platinum_doublet,
 
-                    (case  when regimen in ('%pemetrexed%docetaxel%') then 1
+                    (CASE  WHEN regimen in ('%pemetrexed%docetaxel%') then 1
                           else 0 end) AS Single_agent,
 
-                    (case  when regimen in ('bevacizumab','ranibizumab','aflibercept','ramucirumab')
+                    (CASE  WHEN regimen in ('bevacizumab','ranibizumab','aflibercept','ramucirumab')
                           then 1 else 0 end) AS anti_VEGF_mAb
 
            FROM @cohortDatabaseSchema.@regimenStatsTable
@@ -51,33 +51,33 @@ SELECT cohort_definition_id,
        person_id,
        Line_of_therapy,
 
-      (case when EGFR_tyrosine_kinase_inhibitors = 1 AND
+      (CASE WHEN EGFR_tyrosine_kinase_inhibitors = 1 AND
       Other_EGFR_tyrosine_kinase_inhibitors +
       Anti_PD_1 + Anti_L_1 + Platinum_doublet + Single_agent + anti_VEGF_mAb = 0
         then  'TKI'
 
-      when Other_EGFR_tyrosine_kinase_inhibitors = 1 AND EGFR_tyrosine_kinase_inhibitors +
+      WHEN Other_EGFR_tyrosine_kinase_inhibitors = 1 AND EGFR_tyrosine_kinase_inhibitors +
       Anti_PD_1 + Anti_L_1 + Platinum_doublet + Single_agent + anti_VEGF_mAb = 0
         then  'Other_TKIs'
 
-      when Platinum_doublet = 1 AND Anti_PD_1 + Platinum_doublet +
+      WHEN Platinum_doublet = 1 AND Anti_PD_1 + Platinum_doublet +
       anti_VEGF_mAb >= 2 OR  Anti_L_1  + Platinum_doublet +
       anti_VEGF_mAb >= 2 OR Platinum_doublet + Anti_CTLA_4 +  anti_VEGF_mAb > 2
       AND Other_EGFR_tyrosine_kinase_inhibitors + EGFR_tyrosine_kinase_inhibitors +
       Single_agent = 0
         then 'anti-PD1/L1_and_Platinum_doublet'
 
-      when Platinum_doublet + anti_VEGF_mAb = 0 AND Anti_PD_1 + Anti_L_1
+      WHEN Platinum_doublet + anti_VEGF_mAb = 0 AND Anti_PD_1 + Anti_L_1
       + Anti_CTLA_4 >= 2 AND Other_EGFR_tyrosine_kinase_inhibitors +
       EGFR_tyrosine_kinase_inhibitors + Single_agent = 0
       then 'Immune_checkpoint_inhibitors'
 
-      when Platinum_doublet + anti_VEGF_mAb >= 1 AND Anti_PD_1 + Anti_L_1
+      WHEN Platinum_doublet + anti_VEGF_mAb >= 1 AND Anti_PD_1 + Anti_L_1
       + Anti_CTLA_4 = 0 AND  Platinum_doublet = 1 AND Other_EGFR_tyrosine_kinase_inhibitors +
       EGFR_tyrosine_kinase_inhibitors + Single_agent = 0
       then 'Platinum_doublet'
 
-      when Single_agent + anti_VEGF_mAb >= 1 AND Single_agent = 1
+      WHEN Single_agent + anti_VEGF_mAb >= 1 AND Single_agent = 1
       AND Other_EGFR_tyrosine_kinase_inhibitors +
       EGFR_tyrosine_kinase_inhibitors + Platinum_doublet + Anti_CTLA_4
       + Anti_PD_1 + Anti_L_1 = 0
