@@ -119,7 +119,7 @@ keyFileName <- "your-home-folder-here/.ssh/study-data-site-NSCLC"
 userName <- "study-data-site-NSCLC"
 
 # Run cohort diagnostics -----------------------------------
-NSCLCCharacterization::runCohortDiagnostics <- function(
+NSCLCCharacterization::runCohortDiagnostics(
   connection,
   connectionDetails,
   cdmDatabaseSchema,
