@@ -24,12 +24,12 @@ test_that("Cohort Diagnostics", {
     connection = conn,
     connectionDetails = connectionDetails,
     cdmDatabaseSchema = cdmDatabaseSchema,
-    createCohorts = FALSE,
-    cohortIds = c(101,102,103),
+    createCohorts = TRUE,
     outputFolder = file.path(outputFolder, "diagnosticsExport"),
     cohortDatabaseSchema = cohortDatabaseSchema,
-    cohortTable = "union_table",
-    tempEmulationSchema = NULL
+    cohortTable = "cohortd_test",
+     tempEmulationSchema = NULL
+    # cohortStagingTable = 'cohort_stg_test'
   ), NA)
 
   list_of_files <- list.files(path = file.path(outputFolder, "diagnosticsExport"),
@@ -40,4 +40,46 @@ test_that("Cohort Diagnostics", {
   expect_true(length(list_of_files) > 0)
 
 })
+# ORACLE
 
+
+
+resultsDatabaseSchema <- "alex_alexeyuk_results"
+
+cohortDatabaseSchema <- "alex_alexeyuk_results"
+cohortTable <- "test_cohort_table"
+databaseId <- "testDatabaseId"
+packageName <- "NSCLCCharacterization"
+outputFolder <- getwd()
+###########################Test passed ############################
+test_that("Cohort Diagnostics", {
+  tempEmulationSchema <- "alex_a"
+  cdmDatabaseSchema <- "CDMV5"
+  connectionDetails <- createConnectionDetails(dbms = "oracle",
+                                               server = Sys.getenv("CDM5_ORACLE_SERVER"),
+                                               user = "OHDSI",
+                                               password = Sys.getenv("CDM5_ORACLE_PASSWORD"),
+                                               port = "1521"
+
+  )
+  conn <- connect(connectionDetails)
+
+  expect_error(NSCLCCharacterization::runCohortDiagnostics(
+    tempEmulationSchema <- "OHDSI",
+    connection = conn,
+    connectionDetails = connectionDetails,
+    cdmDatabaseSchema = cdmDatabaseSchema,
+    createCohorts = TRUE,
+    outputFolder = file.path(outputFolder, "diagnosticsExport"),
+    cohortDatabaseSchema = "OHDSI",
+    cohortTable = "oracle_test"
+  ), NA)
+
+  list_of_files <- list.files(path = file.path(outputFolder, "diagnosticsExport"),
+                              recursive = TRUE,
+                              pattern = "\\.csv",
+                              full.names = TRUE)
+
+  expect_true(length(list_of_files) > 0)
+
+})

@@ -34,7 +34,6 @@
 #' @param runIncidenceRates      Generate and export the cohort incidence rates?
 #' @param runCohortOverlap            Generate and export the cohort overlap?
 #' @param runCohortCharacterization   Generate and export the cohort characterization?
-#'
 #' @export
 runCohortDiagnostics <- function(connectionDetails,
                                  connection = NULL,
@@ -47,7 +46,7 @@ runCohortDiagnostics <- function(connectionDetails,
                                  databaseName = "Unknown",
                                  databaseDescription = "Unknown",
                                  createCohorts = TRUE,
-                                 cohortStagingTable = "cohort_stg",
+                                 #cohortStagingTable = "cohort_stg",
                                  runInclusionStatistics = FALSE,
                                  runIncludedSourceConcepts = TRUE,
                                  runOrphanConcepts = TRUE,
@@ -82,22 +81,20 @@ runCohortDiagnostics <- function(connectionDetails,
     cohorts <- getCohortsToCreate()
 
     # Remove any cohorts that are to be excluded
-    cohorts <- cohorts[!(cohorts$cohortId %in% cohortIdsToExcludeFromExecution), ]
-    targetCohortIds <- cohorts[cohorts$cohortType %in% cohortGroups, "cohortId"][[1]] #
+    targetCohortIds <- cohorts[cohorts$cohortType == 'target', "cohortId"][[1]] #
     outcomeCohortIds <- cohorts[cohorts$cohortType == "outcome", "cohortId"][[1]]
     # Start with the target cohorts
     ParallelLogger::logInfo("**********************************************************")
     ParallelLogger::logInfo("  ---- Creating target cohorts ---- ")
     ParallelLogger::logInfo("**********************************************************")
-    instantiateCohortSet(
-      connectionDetails = connectionDetails,
-      connection = connection,
-      cdmDatabaseSchema = cdmDatabaseSchema,
-      tempEmulationSchema = NULL,
-      cohortDatabaseSchema = cohortDatabaseSchema,
-      cohortTable = cohortStagingTable,
-      cohortIds = targetCohortIds,
-      createCohortTable = TRUE
+    instantiateCohortSet(connectionDetails = connectionDetails,
+                         connection = connection,
+                         cdmDatabaseSchema = cdmDatabaseSchema,
+                         tempEmulationSchema = tempEmulationSchema,
+                         cohortDatabaseSchema = cohortDatabaseSchema,
+                         cohortTable = cohortTable,
+                         cohortIds = targetCohortIds,
+                         createCohortTable = TRUE
     )
     # Create the outcome cohorts
     ParallelLogger::logInfo("**********************************************************")
@@ -109,24 +106,10 @@ runCohortDiagnostics <- function(connectionDetails,
       cdmDatabaseSchema = cdmDatabaseSchema,
       tempEmulationSchema = tempEmulationSchema,
       cohortDatabaseSchema = cohortDatabaseSchema,
-      cohortTable = cohortStagingTable,
-      cohortIds = outcomeCohortIds,
-      createCohortTable = FALSE
-    )
-
-
-    # Copy and censor cohorts to the final table
-    ParallelLogger::logInfo("**********************************************************")
-    ParallelLogger::logInfo(" ---- Copy cohorts to main table ---- ")
-    ParallelLogger::logInfo("**********************************************************")
-    copyAndCensorCohorts(
-      connection = connection,
-      cohortDatabaseSchema = cohortDatabaseSchema,
-      cohortStagingTable = cohortStagingTable,
       cohortTable = cohortTable,
-      targetIds = targetCohortIds,
-      tempEmulationSchema = tempEmulationSchema
+      cohortIds = outcomeCohortIds
     )
+
   }
   cohortIds <- getCohortsToCreate()$cohortId[1:3]
   cohortToCreateFile <- getCohortGroupsForDiagnostics()$fileName[1]
@@ -146,8 +129,8 @@ runCohortDiagnostics <- function(connectionDetails,
     databaseId = databaseId,
     databaseName = databaseName,
     databaseDescription = databaseDescription,
-    runInclusionStatistics = FALSE,
-    runIncludedSourceConcepts = runIncludedSourceConcepts,
+    runInclusionStatistics = TRUE,
+    runIncludedSourceConcepts = TRUE,
     runOrphanConcepts = runOrphanConcepts,
     runTimeDistributions = runTimeDistributions,
     runBreakdownIndexEvents = runBreakdownIndexEvents,

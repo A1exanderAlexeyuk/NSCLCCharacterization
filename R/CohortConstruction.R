@@ -220,25 +220,3 @@ saveAndDropTempInclusionStatsTables <- function(connection,
   )
 }
 
-copyAndCensorCohorts <- function(connection,
-                                 cohortDatabaseSchema,
-                                 cohortStagingTable,
-                                 cohortTable,
-                                 targetIds,
-                                 tempEmulationSchema) {
-  packageName <- getThisPackageName()
-
-  sql <- SqlRender::loadRenderTranslateSql(
-    dbms = attr(connection, "dbms"),
-    sqlFilename = "CopyAndCensorCohorts.sql",
-    packageName = packageName,
-    tempEmulationSchema = tempEmulationSchema,
-    warnOnMissingParameters = TRUE,
-    cohort_database_schema = cohortDatabaseSchema,
-    cohort_staging_table = cohortStagingTable,
-    cohort_table = cohortTable
-  )
-
-  ParallelLogger::logInfo("Copy and censor cohorts to main analysis table")
-  DatabaseConnector::executeSql(connection, sql)
-}
