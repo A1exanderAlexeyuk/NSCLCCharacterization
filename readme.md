@@ -159,9 +159,9 @@ connectionDetails <- DatabaseConnector::createConnectionDetails(dbms = dbms,
 tempEmulationSchema <- NULL
 
 # Details specific to the database:
-databaseId <- "SP"
-databaseName <- "Synpuf"
-databaseDescription <- "Testing"
+databaseId <- ""
+databaseName <- ""
+databaseDescription <- ""
 outputFolderPath <- getwd() # if needed, set up a different path for results
 
 # Details for connecting to the CDM and storing the results
@@ -170,8 +170,6 @@ outputFolder <- normalizePath(file.path(outputFolderPath, databaseId))
 cdmDatabaseSchema <- Sys.getenv("CDM_SCHEMA")
 cohortDatabaseSchema <- Sys.getenv("COHORT_SCHEMA")
 cohortTable <- paste0("NSCLC_", databaseId)
-cohortStagingTable <- paste0(cohortTable, "_stg")
-featureSummaryTable <- paste0(cohortTable, "_smry")
 databaseName <- 'db_name'
 cohortIdsToExcludeFromExecution <- c()
 cohortIdsToExcludeFromResultsExport <- NULL
@@ -192,8 +190,7 @@ NSCLCCharacterization::runCohortDiagnostics(
   outputFolder,
   databaseId,
   databaseName,
-  databaseDescription = "Unknown",
-  cohortStagingTable
+  databaseDescription = "Unknown"
 )
 
 
@@ -221,7 +218,7 @@ library(OncologyRegimenFinder)
 writeDatabaseSchema <- "your_schema_to_write" # should be the same as cohortDatabaseSchema
 cdmDatabaseSchema <- "cdm_schema"
 vocabularyTable <- "vocabulary_table"
-regimenCohortTable <- "cohort_table"
+regimeCohortTable <- "regimen_cohort_table"
 regimenTable <- "regimen_table"
 regimenIngredientsTable <- "name_of_your_regimen_stats_table" #sql db an output on OncologyRegimenFinder
 gapBetweenTreatment <- 120 # specify gap between lines what will be used as a difinition on TTD
@@ -229,7 +226,7 @@ dateLagInput <- 30
 OncologyRegimenFinder::createRegimens(connectionDetails,
                                       cdmDatabaseSchema,
                                       writeDatabaseSchema,
-                                      cohortTable = regimenCohortTable,
+                                      cohortTable = regimeCohortTable,
                                       rawEventTable,
                                       regimenTable,
                                       regimenIngredientTable,
@@ -251,10 +248,7 @@ runStudy(connectionDetails,
          tempEmulationSchema = NULL,
          cohortDatabaseSchema,
          writeDatabaseSchema,
-         cohortStagingTable,
          cohortTable,
-         cohortIdsToExcludeFromExecution = c(),
-         cohortIdsToExcludeFromResultsExport = NULL,
          regimenIngredientsTable,
          createRegimenStats = T,
          createCategorizedRegimensTable = T,
@@ -278,4 +272,9 @@ createSankeyPlot(
   categorizedRegimensInfo,
   cohortDefinitionId
 )
+
+
+
+
+
 
