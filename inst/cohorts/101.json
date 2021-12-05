@@ -3,41 +3,15 @@
 	"PrimaryCriteria" : {
 		"CriteriaList" : [
 			{
-				"ConditionOccurrence" : {
-					"CorrelatedCriteria" : {
-						"Type" : "ALL",
-						"CriteriaList" : [
-							{
-								"Criteria" : {
-									"DrugExposure" : {
-										"CodesetId" : 13,
-										"DrugTypeExclude" : false
-									}
-								},
-								"StartWindow" : {
-									"Start" : {
-										"Coeff" : 1
-									},
-									"End" : {
-										"Coeff" : 1
-									},
-									"UseIndexEnd" : false,
-									"UseEventEnd" : false
-								},
-								"RestrictVisit" : false,
-								"IgnoreObservationPeriod" : false,
-								"Occurrence" : {
-									"Type" : 2,
-									"Count" : 1,
-									"IsDistinct" : false
-								}
-							}
-						],
-						"DemographicCriteriaList" : [],
-						"Groups" : []
-					},
-					"CodesetId" : 18,
-					"ConditionTypeExclude" : false
+				"DrugExposure" : {
+					"CodesetId" : 13,
+					"DrugTypeExclude" : false
+				}
+			},
+			{
+				"ProcedureOccurrence" : {
+					"CodesetId" : 13,
+					"ProcedureTypeExclude" : false
 				}
 			}
 		],
@@ -51,7 +25,35 @@
 	},
 	"AdditionalCriteria" : {
 		"Type" : "ALL",
-		"CriteriaList" : [],
+		"CriteriaList" : [
+			{
+				"Criteria" : {
+					"ConditionOccurrence" : {
+						"CodesetId" : 18,
+						"ConditionTypeExclude" : false
+					}
+				},
+				"StartWindow" : {
+					"Start" : {
+						"Days" : 180,
+						"Coeff" : -1
+					},
+					"End" : {
+						"Days" : 0,
+						"Coeff" : 1
+					},
+					"UseIndexEnd" : false,
+					"UseEventEnd" : false
+				},
+				"RestrictVisit" : false,
+				"IgnoreObservationPeriod" : false,
+				"Occurrence" : {
+					"Type" : 2,
+					"Count" : 1,
+					"IsDistinct" : false
+				}
+			}
+		],
 		"DemographicCriteriaList" : [],
 		"Groups" : []
 	},
@@ -90,99 +92,6 @@
 							"DOMAIN_ID" : "Procedure",
 							"VOCABULARY_ID" : "SNOMED",
 							"CONCEPT_CLASS_ID" : "Procedure"
-						},
-						"isExcluded" : false,
-						"includeDescendants" : true,
-						"includeMapped" : false
-					}
-				]
-			}
-		},
-		{
-			"id" : 15,
-			"name" : "Metastasis to liver",
-			"expression" : {
-				"items" : [
-					{
-						"concept" : {
-							"CONCEPT_ID" : 4196266,
-							"CONCEPT_NAME" : "Metastasis from malignant tumor of liver",
-							"STANDARD_CONCEPT" : "S",
-							"STANDARD_CONCEPT_CAPTION" : "Standard",
-							"INVALID_REASON" : "V",
-							"INVALID_REASON_CAPTION" : "Valid",
-							"CONCEPT_CODE" : "315000005",
-							"DOMAIN_ID" : "Condition",
-							"VOCABULARY_ID" : "SNOMED",
-							"CONCEPT_CLASS_ID" : "Clinical Finding"
-						},
-						"isExcluded" : false,
-						"includeDescendants" : true,
-						"includeMapped" : false
-					},
-					{
-						"concept" : {
-							"CONCEPT_ID" : 36770544,
-							"CONCEPT_NAME" : "Metastasis to the Liver",
-							"STANDARD_CONCEPT" : "S",
-							"STANDARD_CONCEPT_CAPTION" : "Standard",
-							"INVALID_REASON" : "V",
-							"INVALID_REASON_CAPTION" : "Valid",
-							"CONCEPT_CODE" : "OMOP5000224",
-							"DOMAIN_ID" : "Measurement",
-							"VOCABULARY_ID" : "Cancer Modifier",
-							"CONCEPT_CLASS_ID" : "Metastasis"
-						},
-						"isExcluded" : false,
-						"includeDescendants" : true,
-						"includeMapped" : false
-					},
-					{
-						"concept" : {
-							"CONCEPT_ID" : 35225637,
-							"CONCEPT_NAME" : "Metastasis to the Liver And Intrahepatic Bile Duct",
-							"STANDARD_CONCEPT" : "S",
-							"STANDARD_CONCEPT_CAPTION" : "Standard",
-							"INVALID_REASON" : "V",
-							"INVALID_REASON_CAPTION" : "Valid",
-							"CONCEPT_CODE" : "OMOP5031701",
-							"DOMAIN_ID" : "Measurement",
-							"VOCABULARY_ID" : "Cancer Modifier",
-							"CONCEPT_CLASS_ID" : "Metastasis"
-						},
-						"isExcluded" : false,
-						"includeDescendants" : true,
-						"includeMapped" : false
-					},
-					{
-						"concept" : {
-							"CONCEPT_ID" : 36769223,
-							"CONCEPT_NAME" : "Metastasis to the Liver with Pathological Confirmation",
-							"STANDARD_CONCEPT" : "S",
-							"STANDARD_CONCEPT_CAPTION" : "Standard",
-							"INVALID_REASON" : "V",
-							"INVALID_REASON_CAPTION" : "Valid",
-							"CONCEPT_CODE" : "OMOP4998900",
-							"DOMAIN_ID" : "Measurement",
-							"VOCABULARY_ID" : "Cancer Modifier",
-							"CONCEPT_CLASS_ID" : "Metastasis"
-						},
-						"isExcluded" : false,
-						"includeDescendants" : true,
-						"includeMapped" : false
-					},
-					{
-						"concept" : {
-							"CONCEPT_ID" : 198700,
-							"CONCEPT_NAME" : "Secondary malignant neoplasm of liver",
-							"STANDARD_CONCEPT" : "S",
-							"STANDARD_CONCEPT_CAPTION" : "Standard",
-							"INVALID_REASON" : "V",
-							"INVALID_REASON_CAPTION" : "Valid",
-							"CONCEPT_CODE" : "94381002",
-							"DOMAIN_ID" : "Condition",
-							"VOCABULARY_ID" : "SNOMED",
-							"CONCEPT_CLASS_ID" : "Clinical Finding"
 						},
 						"isExcluded" : false,
 						"includeDescendants" : true,

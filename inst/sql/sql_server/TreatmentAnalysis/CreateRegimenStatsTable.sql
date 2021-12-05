@@ -5,7 +5,7 @@ CREATE table @cohortDatabaseSchema.@regimenStatsTable (
              cohort_definition_id int,
              person_id bigint,
              Line_of_therapy int,
-             regimen varchar(256),
+             regimen text,
              regimen_start_date date,
              regimen_end_date date,
              Treatment_free_Interval int,

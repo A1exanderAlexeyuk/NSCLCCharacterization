@@ -24,7 +24,6 @@ test_that("Run Study!!!", {
                                                writeDatabaseSchema = cohortDatabaseSchema,
                                                tempEmulationSchema = NULL,
                                                cohortDatabaseSchema = cohortDatabaseSchema,
-                                               cohortStagingTable = cohortTable,
                                                cohortTable = cohortTable,
                                                regimenIngredientsTable = "regimeningredienttable_voc",
                                                createRegimenStats = F,

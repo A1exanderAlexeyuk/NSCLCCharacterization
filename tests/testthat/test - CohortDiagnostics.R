@@ -21,15 +21,17 @@ test_that("Cohort Diagnostics", {
   conn <- connect(connectionDetails = connectionDetails)
 
   expect_error(NSCLCCharacterization::runCohortDiagnostics(
-    connection = conn,
     connectionDetails = connectionDetails,
+    connection = conn,
     cdmDatabaseSchema = cdmDatabaseSchema,
-    createCohorts = TRUE,
-    outputFolder = file.path(outputFolder, "diagnosticsExport"),
     cohortDatabaseSchema = cohortDatabaseSchema,
-    cohortTable = "cohortd_test",
-     tempEmulationSchema = NULL
-    # cohortStagingTable = 'cohort_stg_test'
+    createCohorts = F,
+    cohortTable = 'one_test',
+    tempEmulationSchema = NULL,
+    outputFolder = file.path(outputFolder, "diagnosticsExport"),
+    databaseId  = 'databaseId',
+    databaseName = 'databaseName',
+    databaseDescription = "Unknown"
   ), NA)
 
   list_of_files <- list.files(path = file.path(outputFolder, "diagnosticsExport"),
@@ -74,7 +76,19 @@ test_that("Cohort Diagnostics", {
     cohortDatabaseSchema = "OHDSI",
     cohortTable = "oracle_test"
   ), NA)
-
+  expect_error(NSCLCCharacterization::runCohortDiagnostics(
+    connectionDetails = connectionDetails,
+    connection = conn,
+    cdmDatabaseSchema = cdmDatabaseSchema,
+    cohortDatabaseSchema = cohortDatabaseSchema,
+    createCohorts = TRUE,
+    cohortTable = 'one_test',
+    tempEmulationSchema = NULL,
+    outputFolder = file.path(outputFolder, "diagnosticsExport"),
+    databaseId  = databaseId,
+    databaseName = databaseName,
+    databaseDescription = "Unknown"
+  ), NA)
   list_of_files <- list.files(path = file.path(outputFolder, "diagnosticsExport"),
                               recursive = TRUE,
                               pattern = "\\.csv",
@@ -83,3 +97,13 @@ test_that("Cohort Diagnostics", {
   expect_true(length(list_of_files) > 0)
 
 })
+
+connectionDetails <- createConnectionDetails(
+  dbms = "postgresql",
+  server = "testnode.arachnenetwork.com/synpuf_110k",
+  user = Sys.getenv("ohdsi_password"),
+  password = Sys.getenv("ohdsi_password"),
+  port = "5441"
+)
+conn <- connect(connectionDetails = connectionDetails)
+renderTranslateQuerySql(conn, "select max(cohort_definition_id) from alex_alexeyuk_results.union_table2")

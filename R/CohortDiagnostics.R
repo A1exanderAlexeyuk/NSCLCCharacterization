@@ -111,7 +111,7 @@ runCohortDiagnostics <- function(connectionDetails,
     )
 
   }
-  cohortIds <- getCohortsToCreate()$cohortId[1:3]
+  cohortIds <- getCohortsToCreate()$cohortId
   cohortToCreateFile <- getCohortGroupsForDiagnostics()$fileName[1]
   ParallelLogger::logInfo("Running study diagnostics")
 
@@ -136,7 +136,8 @@ runCohortDiagnostics <- function(connectionDetails,
     runBreakdownIndexEvents = runBreakdownIndexEvents,
     runIncidenceRate = runIncidenceRates,
     runCohortOverlap = runCohortOverlap,
-    runCohortCharacterization = runCohortCharacterization
+    runCohortCharacterization = runCohortCharacterization,
+    covariateSettings = covariateSettings
   )
 }
 

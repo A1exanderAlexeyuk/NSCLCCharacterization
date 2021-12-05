@@ -156,23 +156,23 @@ library(OncologyRegimenFinder)
 writeDatabaseSchema <- "your_schema_to_write" # should be the same as cohortDatabaseSchema
 cdmDatabaseSchema <- "cdm_schema"
 vocabularyTable <- "vocabulary_table"
-regimeCohortTable <- "regimen_cohort_table"
+regimenCohortTable <- "regimen_cohort_table"
 regimenTable <- "regimen_table"
-regimenIngredientsTable <- "name_of_your_regimen_stats_table" #sql db an output on OncologyRegimenFinder
+regimenIngredientTable <- "name_of_your_regimen_stats_table" #sql db an output on OncologyRegimenFinder
 gapBetweenTreatment <- 120 # specify gap between lines what will be used as a difinition on TTD
 dateLagInput <- 30
 OncologyRegimenFinder::createRegimens(connectionDetails,
                                       cdmDatabaseSchema,
                                       writeDatabaseSchema,
-                                      cohortTable = regimeCohortTable,
+                                      cohortTable = regimenCohortTable,
                                       rawEventTable,
                                       regimenTable,
                                       regimenIngredientTable,
                                       vocabularyTable,
                                       cancerConceptId = 4115276,
                                       dateLagInput = 30,
-                                      generateVocabTable = FALSE,
-                                      generateRawEvents = FALSE
+                                      generateVocabTable = F,
+                                      generateRawEvents = F
 )
 
 
@@ -180,7 +180,7 @@ OncologyRegimenFinder::createRegimens(connectionDetails,
 # 'Results_<databaseId>.zip in the outputFolder.
 regimenStatsTable <- "regimen_stats_table"
 
-runStudy(connectionDetails,
+NSCLCCharacterization::runStudy(connectionDetails,
          connection,
          cdmDatabaseSchema,
          tempEmulationSchema = NULL,
