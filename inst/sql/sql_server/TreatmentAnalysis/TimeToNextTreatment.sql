@@ -3,10 +3,11 @@ WITH init_data AS (
                   CASE WHEN
                   Time_to_Next_Treatment IS NOT NULL  then 1 else 0 end
                   as event,
-                  Time_to_Next_Treatment as time_to_event
+                  Time_to_Next_Treatment as time_to_event,
+                  Line_of_therapy
                   FROM @cohortDatabaseSchema.@regimenStatsTable
                   WHERE cohort_definition_id IN (@targetId)
-                  AND Time_to_Next_Treatment IS NOT NULL
+                  AND Line_of_therapy = 1
                   )
 
 
