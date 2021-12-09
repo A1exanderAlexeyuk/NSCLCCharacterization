@@ -45,7 +45,7 @@ with temp_ as (SELECT DISTINCT c.cohort_definition_id,
 
 
 temp_0 as(
-        SELECT distinct  cohort_definition_id, person_id_ as person_id, cohort_start_date, regimen_start_date,
+        SELECT  cohort_definition_id, person_id_ as person_id, cohort_start_date, regimen_start_date,
           coalesce(regimen_end_date, cohort_end_date,observation_period_end_date,
           death_date) as  regimen_end_date,
           regimen, observation_period_end_date, death_date , cohort_end_date,
@@ -69,13 +69,17 @@ temp_1 as (
 
 
 temp_2 as (
-      	SELECT distinct *,
+      	SELECT distinct cohort_definition_id, person_id,
+        	regimen_end_date,
+        	 regimen, regimen_start_date,
+        	 death_date,    	 cohort_start_date,
       	coalesce(lag(regimen, 1) over
-      	(order by person_id, regimen_start_date) != regimen, True) as New_regimen
+      	(PARTITION BY cohort_definition_id, person_id, regimen_start_date
+      	order by person_id, regimen_start_date) != regimen, True) as New_regimen
       		FROM temp_1
       	group by cohort_definition_id, person_id,
       	 death_date, regimen, regimen_start_date,
-      	 ingredient_start_date,	 regimen_end_date,
+      	 regimen_end_date,
       	 cohort_start_date
       	order by 2,5
 	),
@@ -95,7 +99,7 @@ temp_4 as (
       	SELECT  cohort_definition_id, person_id,
       	regimen_start_date,regimen_end_date, death_date, regimen,
       	count(Line_of_therapy) over
-      	(partition by person_id order by regimen_start_date)
+      	(partition by cohort_definition_id, person_id order by regimen_start_date)
       	as Line_of_therapy,
       	cohort_start_date
       	FROM temp_3
@@ -124,6 +128,7 @@ temp_6 as (
              regimen,
              regimen_start_date,
              regimen_end_date,
+
       	   case WHEN lead(regimen_start_date, 1) over (PARTITION BY cohort_definition_id,
             	person_id order by person_id) - regimen_end_date <= 0 then NULL
       	   else lead(regimen_start_date, 1) over (PARTITION BY cohort_definition_id,
