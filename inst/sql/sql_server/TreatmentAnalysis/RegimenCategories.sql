@@ -65,12 +65,12 @@ SELECT cohort_definition_id,
       anti_VEGF_mAb >= 2 OR Platinum_doublet + Anti_CTLA_4 +  anti_VEGF_mAb > 2
       AND Other_EGFR_tyrosine_kinase_inhibitors + EGFR_tyrosine_kinase_inhibitors +
       Single_agent = 0
-        then 'anti-PD1/L1_and_Platinum_doublet'
+        then 'anti-PD1/L1_and_Platinum_doublet' --!!!should present
 
       WHEN Platinum_doublet + anti_VEGF_mAb = 0 AND Anti_PD_1 + Anti_L_1
       + Anti_CTLA_4 >= 2 AND Other_EGFR_tyrosine_kinase_inhibitors +
       EGFR_tyrosine_kinase_inhibitors + Single_agent = 0
-      then 'Immune_checkpoint_inhibitors'
+      then 'Immune_checkpoint_inhibitors' --!!!should present
 
       WHEN Platinum_doublet + anti_VEGF_mAb >= 1 AND Anti_PD_1 + Anti_L_1
       + Anti_CTLA_4 = 0 AND  Platinum_doublet = 1 AND Other_EGFR_tyrosine_kinase_inhibitors +

@@ -30,7 +30,7 @@ test_that("Get Distributions", {
                                                sql = sql,
                                                cdmDatabaseSchema = cdmDatabaseSchema,
                                                cohortDatabaseSchema = cohortDatabaseSchema,
-                                               cohortTable = "union_table",
+                                               cohortTable = "union_table110k",
                                                targetIds = targetIdsFormatted
   )
   metricsDistribution <- data.frame()
@@ -45,7 +45,7 @@ test_that("Get Distributions", {
     result <- NSCLCCharacterization::getAtEventDistribution(connection = conn,
                                                             cohortDatabaseSchema = cohortDatabaseSchema,
                                                             cdmDatabaseSchema,
-                                                            cohortTable = "union_table",
+                                                            cohortTable = "union_table110k",
                                                             targetIds = targetIdsFormatted,
                                                             databaseId = databaseId,
                                                             packageName = packageName,

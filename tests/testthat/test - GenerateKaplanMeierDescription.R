@@ -156,3 +156,26 @@ test_that("generateTimeToTreatmenInitiationStatistics", {
   expect_true(dim(t)[[1]] > 0)
 })
 
+testthat::test_that("generateTreatmentStatistics", {
+  cohortDatabaseSchema <- "regimen_stats_schema"
+  targetIds <- c(1)
+  regimenStatsTable <- "rstF3"
+  databaseId <- "test"
+  connectionDetails <- DatabaseConnector::createConnectionDetails(
+    dbms = "postgresql",
+    server = "postgres/localhost",
+    port = "5432",
+    connectionString = "jdbc:postgresql://localhost:5432/postgres",
+    user = "postgres",
+    password = Sys.getenv("postgres_local_password"),
+    pathToDriver = Sys.getenv("DATABASECONNECTOR_JAR_FOLDER")
+  )
+  conn <- connect(connectionDetails = connectionDetails)
+  t <- NSCLCCharacterization::generateTreatmentStatistics(connection = conn,
+                                                            cohortDatabaseSchema = cohortDatabaseSchema,
+                                                            targetIds = targetIds,
+                                                          regimenStatsTable = "rstF3",
+                                                            databaseId = databaseId)
+  testthat::expect_s3_class(t, "data.frame")
+  testthat::expect_true(dim(t)[[1]] > 0)
+})

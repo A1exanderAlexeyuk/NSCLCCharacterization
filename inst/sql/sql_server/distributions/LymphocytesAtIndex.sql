@@ -8,32 +8,27 @@ WITH tab       AS (
                   FROM @cohortDatabaseSchema.@cohortTable cohort
                   JOIN @cdmDatabaseSchema.measurement m
                       ON cohort.subject_id = m.person_id
-                          AND m.measurement_concept_id IN (718584,
-                                                            718585,
-                                                            718589,
-                                                            718588,
-                                                            718586,
-                                                            718587,
-                                                            42529561,
-42529560,
-42529558,
-42529176,
-42529175,
-42527894,
-42527893,
-42527892
-                                                            )
+                          AND m.measurement_concept_id IN (
+                            4015169,
+                            4132152,
+                            4339397,
+                            4298431,
+                            2212637,
+                            37394431,
+                            4212899,
+                            45887888,
+                            37208689
+
+                          )
                   WHERE cohort_definition_id IN (@target_ids)
                     AND abs(datediff(day, cohort.cohort_start_date, m.measurement_date)) <= 30
-
                   ),
      init_data AS (
                   SELECT t1.cohort_definition_id,
                          value_as_number AS value
                   FROM tab t1
                   JOIN (
-                       SELECT cohort_definition_id, subject_id,
-                       min(measurement_date) AS min_date
+                       SELECT cohort_definition_id, subject_id, min(measurement_date) AS min_date
                        FROM tab
                        GROUP BY cohort_definition_id, subject_id
                        ) t2

@@ -308,3 +308,53 @@ generateTimeToTreatmenInitiationStatistics <- function(connection,
     ))
   })
 }
+
+
+
+#' @export
+generateTreatmentStatistics <- function(connection,
+                                        cohortDatabaseSchema,
+                                        targetIds,
+                                        regimenStatsTable,
+                                        databaseId) {
+
+  packageName <- getThisPackageName()
+  sqlFileNames <- c(
+    "TimeToNextTreatmentDistribution.sql",
+    "TimeToTreatmentDiscontinuationDistribution.sql",
+    "TreatmentFreeIntervalDistribution.sql"
+                    )
+
+  distributionOut <- purrr::map_dfr(targetIds, function(targetId) {
+    purrr::map_dfr(sqlFileNames, function(sqlFileName){
+      pathToSql <- system.file("sql", "sql_server", "TreatmentAnalysis",
+                               sqlFileName,
+                               package = packageName
+      )
+
+      sql <- readChar(pathToSql, file.info(pathToSql)$size)
+
+
+      sqlRendered <- SqlRender::render(
+        sql = sql,
+        cohortDatabaseSchema = cohortDatabaseSchema,
+        targetId = targetId,
+        databaseId = databaseId,
+        regimenStatsTable = regimenStatsTable
+      )
+
+      sqlTmp <- SqlRender::translate(
+        sql = sqlRendered,
+        targetDialect = connection@dbms
+      )
+
+      data.frame(DatabaseConnector::querySql(
+        connection = connection,
+        sql = sqlTmp,
+        snakeCaseToCamelCase = T
+      ))
+
+      })
+  })
+  return(distributionOut)
+}

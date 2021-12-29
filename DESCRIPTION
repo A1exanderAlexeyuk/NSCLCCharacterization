@@ -2,8 +2,8 @@ Package: NSCLCCharacterization
 Type: Package
 Title: Metastatic Non-Small Cellular Lung Cancer Characterization Package
 Version: 0.1.0
-Author: Who wrote it
-Maintainer: The package maintainer <yourself@somewhere.net>
+Author: Alexander Alexeyuk (alexander.alexeyuk@odysseusinc.com), Adam Black (adam.black@odysseusinc.com)
+Maintainer: Alexander Alexeyuk <alexander.alexeyuk@odysseusinc.com>
 Description: More about what it does (maybe more than one line)
     Use four spaces when indenting paragraphs within the Description.
 Depends:
@@ -17,16 +17,15 @@ Imports:
   ff,
   magrittr,
   digest,
-  readr,
   broom,
   dplyr,
   data.table,
   ggplot2,
   tibble,
-  magrittr,
   survival,
   survminer,
-  tidyr
+  tidyr,
+  readr
 Suggests:
   knitr,
   rmarkdown

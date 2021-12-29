@@ -4,8 +4,8 @@ CREATE TABLE @cohortDatabaseSchema.subject_age AS
 SELECT tab.cohort_definition_id,
        tab.person_id,
        tab.cohort_start_date,
-       DATEDIFF(year, DATEFROMPARTS(tab.year_of_birth, tab.month_of_birth, tab.day_of_birth),
-                tab.cohort_start_date) AS age
+       abs(tab.year_of_birth  -  EXTRACT(YEAR FROM tab.cohort_start_date)) AS age
+
 FROM (
      SELECT c.cohort_definition_id, p.person_id, c.cohort_start_date, p.year_of_birth, p.month_of_birth, p.day_of_birth
      FROM @cohortDatabaseSchema.@cohortTable c

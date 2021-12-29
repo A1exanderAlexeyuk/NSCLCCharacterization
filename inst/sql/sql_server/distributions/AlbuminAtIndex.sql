@@ -8,21 +8,14 @@ WITH tab       AS (
                   FROM @cohortDatabaseSchema.@cohortTable cohort
                   JOIN @cdmDatabaseSchema.measurement m
                       ON cohort.subject_id = m.person_id
-                          AND m.measurement_concept_id IN (718584,
-                                                            718585,
-                                                            718589,
-                                                            718588,
-                                                            718586,
-                                                            718587,
-                                                            42529561,
-42529560,
-42529558,
-42529176,
-42529175,
-42527894,
-42527893,
-42527892
-                                                            )
+                          AND m.measurement_concept_id IN (
+                          2212186,
+                          2212187,
+                          2212099,
+                          2212093,
+                          2212096,
+                          2722256
+                          )
                   WHERE cohort_definition_id IN (@target_ids)
                     AND abs(datediff(day, cohort.cohort_start_date, m.measurement_date)) <= 30
 

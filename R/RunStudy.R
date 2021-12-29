@@ -166,6 +166,19 @@ runStudy <- function(connectionDetails,
     exportFolder,
     "TTD_info.csv"
   ))
+
+  distributionsTreatment <- generateTreatmentStatistics(
+    connection = connection,
+    targetIds = targetIdsTreatmentIndex,
+    databaseId = databaseId,
+    regimenStatsTable = regimenStatsTable,
+    cohortDatabaseSchema = cohortDatabaseSchema
+  )
+  writeToCsv(distributionsTreatment, file.path(
+    exportFolder,
+    "distributionsTreatment.csv"
+  ))
+
   ParallelLogger::logInfo("Dropping RegimenStatsTable")
   if(dropRegimenStatsTable){
     DatabaseConnector::renderTranslateExecuteSql(connection = connection,
@@ -179,7 +192,7 @@ runStudy <- function(connectionDetails,
 
 
   # prepare necessary tables
-  targetIdsFormatted <- targetIdsTreatmentIndex
+  targetIdsFormatted <- paste(targetIdsTreatmentIndex, collapse = ', ')
   pathToSql <- system.file("sql", "sql_server",
                            "distributions", "IQRComplementaryTables.sql",
                            package = getThisPackageName()
@@ -192,17 +205,24 @@ runStudy <- function(connectionDetails,
                                                cdmDatabaseSchema = cdmDatabaseSchema,
                                                cohortDatabaseSchema = cohortDatabaseSchema,
                                                cohortTable = cohortTable,
-                                               targetIds = targetIdsFormatted
+                                               targetIds =  c(101,102,103)
   )
 
   metricsDistribution <- data.frame()
+
   DistribAnalyses <- c(
     "AgeAtIndex",
     "CharlsonAtIndex",
-    "NeutrophilToLymphocyteRatioAtIndex",
+    "HemoglobinAtIndex",
+    "AlbuminAtIndex",
+    "LactateDehydrogenaseAtIndex",
+    "CreatininAtIndex",
+    "LymphocytesAtIndex",
     "PDLAtIndex",
-    "PlateletToLymphocyteRatioAtIndex"
+    "PlateletAtIndex",
+    "LeucocytesAtIndex"
   )
+
   for (analysis in DistribAnalyses) {
     result <- getAtEventDistribution(
       connection = connection,
@@ -214,6 +234,7 @@ runStudy <- function(connectionDetails,
       packageName = getThisPackageName(),
       analysisName = analysis
     )
+
     metricsDistribution <- rbind(metricsDistribution, result)
   }
 
@@ -223,6 +244,7 @@ runStudy <- function(connectionDetails,
     exportFolder,
     "metrics_distribution__info.csv"
   ))
+
   # drom temp tables
   pathToSql <- system.file("sql",
                            "sql_server",

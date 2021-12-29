@@ -9,7 +9,8 @@ getAtEventDistribution <- function(connection,
                                    analysisName) {
   targetIds <- paste(targetIds, collapse = ", ")
 
-  sqlFileName <- paste(analysisName, "sql", sep = ".")
+  sqlFileName <- paste0(analysisName, ".sql"#, sep = "."
+                        )
 
   analysisName <- substring(SqlRender::camelCaseToTitleCase(analysisName), 2)
 
