@@ -28,7 +28,7 @@ test_that("Run Study!!!", {
                                                regimenIngredientsTable = "regimeningredienttable_voc",
                                                createRegimenStats = F,
                                                gapBetweenTreatment=120,
-                                               createCategorizedRegimensTable = T,
+                                               createCategorizedRegimensTable = F,
                                                regimenStatsTable = 'test_rst',
                                                exportFolder = outputFolder,
                                                databaseId=databaseId,

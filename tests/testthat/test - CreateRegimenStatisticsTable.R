@@ -15,7 +15,7 @@ test_that("Create Regimen Statistics", {
   cdmDatabaseSchema = "bigquery"
   writeDatabaseSchema = "bigquery"
   regimenIngredientsTable <- "out_new"
-  regimenStatsTable <- "rst_test"
+  regimenStatsTable <- "rst_test2"
   cohortTable = "cohort_table"
   expect_error(NSCLCCharacterization::createRegimenStats(
     connectionDetails = connectionDetails,

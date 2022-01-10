@@ -122,6 +122,17 @@ temp_5 as (SELECT  distinct cohort_definition_id,
       	order by cohort_definition_id, person_id, regimen_start_date),
 
 temp_6 as (
+    SELECT DISTINCT
+             cohort_definition_id,
+             person_id,
+             Line_of_therapy,
+             regimen,
+             regimen_start_date,
+             regimen_end_date
+    FROM temp_5
+),
+
+temp_7 as (
           SELECT cohort_definition_id,
              person_id,
              Line_of_therapy,
@@ -130,10 +141,10 @@ temp_6 as (
              regimen_end_date,
 
       	   case WHEN lead(regimen_start_date, 1) over (PARTITION BY cohort_definition_id,
-            	person_id order by person_id) - regimen_end_date <= 0 then NULL
-      	   else lead(regimen_start_date, 1) over (PARTITION BY cohort_definition_id,
-            	person_id order by person_id) - regimen_end_date end
-      			            as Treatment_free_Interval,
+            	        person_id order by person_id) - regimen_end_date < 1 then NULL
+      	              else lead(regimen_start_date, 1) over (PARTITION BY cohort_definition_id,
+            	        person_id order by person_id) - regimen_end_date end
+      			          as Treatment_free_Interval,
 
 
       	CASE WHEN lead(regimen_start_date, 1) over (PARTITION BY
@@ -147,17 +158,18 @@ temp_6 as (
       							   end as Time_to_Treatment_Discontinuation,
 
       	CASE WHEN Line_of_therapy = 1 AND
-      	  lead(regimen_start_date, 1) over (PARTITION BY cohort_definition_id, person_id
-      	order by cohort_definition_id, person_id) IS NOT NULL AND
-      	lead(regimen_start_date, 1) over (PARTITION BY cohort_definition_id, person_id
-      	  order by cohort_definition_id, person_id) - regimen_start_date > 0
-      	   then lead(regimen_start_date, 1) over (PARTITION BY cohort_definition_id, person_id
-      	  order by cohort_definition_id, person_id) - regimen_start_date
-      		end
-      		as Time_to_Next_Treatment
-      FROM temp_5
+                    	lead(regimen_start_date, 1) over (PARTITION BY cohort_definition_id, person_id
+                    	order by cohort_definition_id, person_id) IS NOT NULL AND
+                    	lead(regimen_start_date, 1) over (PARTITION BY cohort_definition_id, person_id
+                    	order by cohort_definition_id, person_id) - regimen_start_date > 0
+                    	then lead(regimen_start_date, 1) over (PARTITION BY cohort_definition_id, person_id
+                    	order by cohort_definition_id, person_id) - regimen_start_date
+                      end
+                    	as Time_to_Next_Treatment
+      FROM temp_6
       order by  cohort_definition_id, person_id, regimen_start_date, Line_of_therapy)
 
 SELECT *
-FROM temp_6 order by 1,2,3,5
+FROM temp_7
+order by 1,2,3,5
 

@@ -43,8 +43,8 @@ test_that("Survival test", {
 # !!Test passed
 test_that("generateKaplanMeierDescriptionTFI", {
   # locally
-  cohortDatabaseSchema <- "regimen_stats_schema"
-  regimenStatsTable <- "rstF3"
+  cohortDatabaseSchema <- "bigquery"
+  regimenStatsTable <- "rst_test"
   targetIds <- 1
   databaseId <- "test"
   connectionDetails <- DatabaseConnector::createConnectionDetails(

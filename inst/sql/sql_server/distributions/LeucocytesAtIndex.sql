@@ -9,13 +9,8 @@ WITH tab       AS (
                   JOIN @cdmDatabaseSchema.measurement m
                       ON cohort.subject_id = m.person_id
                           AND m.measurement_concept_id IN (
-                          2212638,
                           2212656,
-                          2212657,
-                          2212640,
-                          2212639,
-                          2212091,
-                          2213329
+                          2212640
 
                           )
                   WHERE cohort_definition_id IN (@target_ids)

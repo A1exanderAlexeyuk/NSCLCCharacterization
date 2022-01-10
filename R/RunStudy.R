@@ -29,7 +29,7 @@ runStudy <- function(connectionDetails,
     exportFolder,
     "NSCLCCharacterization.txt"
   ))
-  on.exit(ParallelLogger::unregisterLogger("DEFAULT"))
+  #on.exit(ParallelLogger::unregisterLogger("DEFAULT"))
 
   # Write out the system information
   ParallelLogger::logInfo(.systemInfo())
@@ -83,7 +83,7 @@ runStudy <- function(connectionDetails,
       "categorizedRegimens_info.csv"
     ))
   } else {
-    ParallelLogger::logWarn("Regimen categories table is not created")
+    ParallelLogger::logInfo("Regimen categories table is not created")
   }
 
   # Generate survival info -----------------------------------------------------------------
@@ -205,7 +205,9 @@ runStudy <- function(connectionDetails,
                                                cdmDatabaseSchema = cdmDatabaseSchema,
                                                cohortDatabaseSchema = cohortDatabaseSchema,
                                                cohortTable = cohortTable,
-                                               targetIds =  c(101,102,103)
+                                               targetIds =  c(101,
+                                                              102,
+                                                              103)
   )
 
   metricsDistribution <- data.frame()
@@ -259,8 +261,6 @@ runStudy <- function(connectionDetails,
   )
 
 }
-
-
 
 writeToCsv <- function(data,
                        fileName,

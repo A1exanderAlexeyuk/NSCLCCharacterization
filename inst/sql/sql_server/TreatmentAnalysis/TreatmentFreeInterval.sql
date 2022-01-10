@@ -5,8 +5,8 @@ WITH init_data AS (
                   else 1 end as event,
                   Treatment_free_Interval as time_to_event
                   FROM @cohortDatabaseSchema.@regimenStatsTable
-                  WHERE cohort_definition_id IN (@targetId)
-                  AND Treatment_free_Interval IS NOT NULL
+                  WHERE cohort_definition_id IN (@targetId) AND
+                  line_of_therapy > 1 AND line_of_therapy < 5
                   )
 
                   SELECT ROW_NUMBER() OVER (PARTITION BY

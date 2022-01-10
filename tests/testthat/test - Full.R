@@ -85,7 +85,7 @@ NSCLCCharacterization::runStudy(connectionDetails = connectionDetails,
    "timeToTI_info.csv"             ,
    "TTD_info.csv" )
 
-  splitter <- function(x){
+  spitter <- function(x){
     unlist(stringi::stri_split(x, regex="/"))[9]
   }
   list <- sapply(list_of_files, splitter)
@@ -105,39 +105,39 @@ test_that("FULL 110k !!!", {
   )
   conn <- connect(connectionDetails = connectionDetails)
 
-  # expect_error(NSCLCCharacterization::runCohortDiagnostics(
-  #   connectionDetails = connectionDetails,
-  #   connection = conn,
-  #   cdmDatabaseSchema = cdmDatabaseSchema,
-  #   cohortDatabaseSchema = cohortDatabaseSchema,
-  #   createCohorts = T,
-  #   cohortTable = 'union_table110k',
-  #   tempEmulationSchema = NULL,
-  #   outputFolder = file.path(outputFolder, "diagnosticsExport"),
-  #   databaseId  = 'databaseId',
-  #   databaseName = 'databaseName',
-  #   databaseDescription = "Unknown"
-  # ), NA)
-  # writeDatabaseSchema <- "alex_alexeyuk_results"
-  # cdmDatabaseSchema <- "cdm_531"
-  # vocabularyTable <- "vt"
-  # ccohortTable <- "ct_regimens"
-  # regimenTable <- "regimenTable"
-  # regimenIngredientTable <- "regimenIngredientTable_voc"
-  # dateLagInput <- 30
-  # expect_error(OncologyRegimenFinder::createRegimens(connectionDetails = connectionDetails,
-  #                                                    cdmDatabaseSchema = cdmDatabaseSchema,
-  #                                                    writeDatabaseSchema = writeDatabaseSchema,
-  #                                                    cohortTable = ccohortTable,
-  #                                                    rawEventTable = rawEventTable,
-  #                                                    regimenTable = regimenTable,
-  #                                                    regimenIngredientTable = regimenIngredientTable,
-  #                                                    vocabularyTable = vocabularyTable,
-  #                                                    cancerConceptId = 4115276,
-  #                                                    dateLagInput = 30,
-  #                                                    generateVocabTable = F,
-  #                                                    generateRawEvents = F
-  # ), NA)
+  expect_error(NSCLCCharacterization::runCohortDiagnostics(
+    connectionDetails = connectionDetails,
+    connection = conn,
+    cdmDatabaseSchema = cdmDatabaseSchema,
+    cohortDatabaseSchema = cohortDatabaseSchema,
+    createCohorts = T,
+    cohortTable = 'union_table110k',
+    tempEmulationSchema = NULL,
+    outputFolder = file.path(outputFolder, "diagnosticsExport"),
+    databaseId  = 'databaseId',
+    databaseName = 'databaseName',
+    databaseDescription = "Unknown"
+  ), NA)
+  writeDatabaseSchema <- "alex_alexeyuk_results"
+  cdmDatabaseSchema <- "cdm_531"
+  vocabularyTable <- "vt"
+  ccohortTable <- "ct_regimens"
+  regimenTable <- "regimenTable"
+  regimenIngredientTable <- "regimenIngredientTable_voc"
+  dateLagInput <- 30
+  expect_error(OncologyRegimenFinder::createRegimens(connectionDetails = connectionDetails,
+                                                     cdmDatabaseSchema = cdmDatabaseSchema,
+                                                     writeDatabaseSchema = writeDatabaseSchema,
+                                                     cohortTable = ccohortTable,
+                                                     rawEventTable = rawEventTable,
+                                                     regimenTable = regimenTable,
+                                                     regimenIngredientTable = regimenIngredientTable,
+                                                     vocabularyTable = vocabularyTable,
+                                                     cancerConceptId = 4115276,
+                                                     dateLagInput = 30,
+                                                     generateVocabTable = F,
+                                                     generateRawEvents = F
+  ), NA)
 
 
 
@@ -216,23 +216,27 @@ connectionDetails <- createConnectionDetails(
   port = "5441"
 )
 conn <- connect(connectionDetails = connectionDetails)
-NSCLCCharacterization::runStudy(connectionDetails = connectionDetails,
-                                connection = conn,
-                                cdmDatabaseSchema = cdmDatabaseSchema,
-                                tempEmulationSchema = NULL,
-                                cohortDatabaseSchema = cohortDatabaseSchema,
-                                writeDatabaseSchema = writeDatabaseSchema,
-                                cohortTable = 'union_table2m',
-                                regimenIngredientsTable = 'regimenIngredientTable_voc',
-                                createRegimenStats = F,
-                                createCategorizedRegimensTable = F,
-                                regimenStatsTable = 'regimen_stats_table',
-                                dropRegimenStatsTable = F,
-                                exportFolder = file.path(outputFolder, "diagnosticsExport"),
-                                databaseId = 't',
-                                databaseName = 't',
-                                databaseDescription = 't',
-                                gapBetweenTreatment = 120)
+# NSCLCCharacterization::runStudy(connectionDetails = connectionDetails,
+#                                 connection = conn,
+#                                 cdmDatabaseSchema = cdmDatabaseSchema,
+#                                 tempEmulationSchema = NULL,
+#                                 cohortDatabaseSchema = cohortDatabaseSchema,
+#                                 writeDatabaseSchema = writeDatabaseSchema,
+#                                 cohortTable = 'union_table2m',
+#                                 regimenIngredientsTable = 'regimenIngredientTable_voc',
+#                                 createRegimenStats = F,
+#                                 createCategorizedRegimensTable = F,
+#                                 regimenStatsTable = 'regimen_stats_table',
+#                                 dropRegimenStatsTable = F,
+#                                 exportFolder = file.path(outputFolder, "diagnosticsExport"),
+#                                 databaseId = 't',
+#                                 databaseName = 't',
+#                                 databaseDescription = 't',
+#                                 gapBetweenTreatment = 120)
 
 ll <- dbGetQuery(conn, "select subject_id from alex_alexeyuk_results.union_table2m limit 10")
-tt <- dbGetQuery(conn, "select * from cdm_531.measurement where person_id in (1704, 2049)")
+dbGetQuery(conn, "select measurement_concept_id from cdm_531.measurement
+where measurement_concept_id IN (
+
+                          2212389)
+            limit 100")

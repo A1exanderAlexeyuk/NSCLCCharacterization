@@ -101,9 +101,9 @@ generateKaplanMeierDescriptionTNT <- function(connection,
       return(NULL)
     }
 
-        survInfo <- survival::survfit(survival::Surv(timeToEvent, event) ~ 1,
+    survInfo <- survival::survfit(survival::Surv(timeToEvent, event) ~ 1,
                                   data = km_proc
-                                  )
+    )
 
 
     survInfo <- survminer::surv_summary(survInfo)
@@ -323,7 +323,7 @@ generateTreatmentStatistics <- function(connection,
     "TimeToNextTreatmentDistribution.sql",
     "TimeToTreatmentDiscontinuationDistribution.sql",
     "TreatmentFreeIntervalDistribution.sql"
-                    )
+  )
 
   distributionOut <- purrr::map_dfr(targetIds, function(targetId) {
     purrr::map_dfr(sqlFileNames, function(sqlFileName){
@@ -354,7 +354,7 @@ generateTreatmentStatistics <- function(connection,
         snakeCaseToCamelCase = T
       ))
 
-      })
+    })
   })
   return(distributionOut)
 }

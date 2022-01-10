@@ -1,7 +1,8 @@
 WITH init_data AS (
                   SELECT cohort_definition_id,
                   CASE WHEN
-                  Time_to_Next_Treatment IS NOT NULL  then 1 else 0 end
+                  Time_to_Next_Treatment IS NOT NULL
+                  then 1 else 0 end
                   as event,
                   Time_to_Next_Treatment as time_to_event,
                   Line_of_therapy
