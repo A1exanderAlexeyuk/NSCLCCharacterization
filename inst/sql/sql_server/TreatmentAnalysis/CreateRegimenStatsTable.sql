@@ -167,9 +167,14 @@ temp_7 as (
                       end
                     	as Time_to_Next_Treatment
       FROM temp_6
-      order by  cohort_definition_id, person_id, regimen_start_date, Line_of_therapy)
+      order by  cohort_definition_id,
+      person_id,
+      regimen_start_date,
+      Line_of_therapy
+      )
 
 SELECT *
 FROM temp_7
+WHERE regimen IS NOT NULL
 order by 1,2,3,5
 

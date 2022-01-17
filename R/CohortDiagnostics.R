@@ -73,8 +73,8 @@ runCohortDiagnostics <- function(connectionDetails,
 
   ParallelLogger::addDefaultFileLogger(file.path(outputFolder, "log.txt"))
   ParallelLogger::addDefaultErrorReportLogger(file.path(outputFolder, "errorReportR.txt"))
-  on.exit(ParallelLogger::unregisterLogger("DEFAULT_FILE_LOGGER", silent = TRUE))
-  on.exit(ParallelLogger::unregisterLogger("DEFAULT_ERRORREPORT_LOGGER", silent = TRUE), add = TRUE)
+  #on.exit(ParallelLogger::unregisterLogger("DEFAULT_FILE_LOGGER", silent = TRUE))
+  #on.exit(ParallelLogger::unregisterLogger("DEFAULT_ERRORREPORT_LOGGER", silent = TRUE), add = TRUE)
 
   if (createCohorts) {
     # Instantiate cohorts -----------------------------------------------------------------------
