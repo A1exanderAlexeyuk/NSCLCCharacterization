@@ -51,7 +51,7 @@ WITH cte AS (SELECT cohort_definition_id,
 
                           then 1 else 0 end) AS Other_EGFR_tyrosine_kinase_inhibitors,
 
-                   ( CASE WHEN regimen LIKE
+                   ( CASE WHEN 
                    regimen LIKE '%pembrolizumab%' OR
                    regimen LIKE '%nivolumab%' OR
                    regimen LIKE '%dostarlimab%'
