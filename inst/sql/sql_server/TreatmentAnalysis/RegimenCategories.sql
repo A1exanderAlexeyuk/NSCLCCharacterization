@@ -1,45 +1,91 @@
 /*
-regimen_1EGFR tyrosine kinase inhibitors (TKI) [Erlotinib, Gefitinib, Afatinib, Dacomitinib, Osimertinib]
-regimen_2Other TKIs [Crizotinib, Ceritinib, Brigatinib, Alectinib, Lorlatinib, Entrectinib,, Capmatinib, Selpercatinib, Pralsetinib, Vandetanib, Cabozantinib, Lenvatinib, Larotrectinib, Dabrafenib+Trametinib]
-regimen_3Immune checkpoint inhibitors (anti-PD1/L1, anti-CTLA-4 or both)
-regimen_4Immune checkpoint inhibitors (anti-PD1/L1) and platinum doublet chemotherapy with or without anti-VEGF monoclonal antibody (mAb) or dual immune checkpoint inhibitors (anti-PD1 and anti-CTLA-4) and platinum doublet chemotherapy
-regimen_5Platinum doublet chemotherapy with or without anti-VEGF mAb
-regimen_6Single agent chemotherapy with or without anti-VEGF mAb [Pemetrexed with or without Bevacizumab, Docetaxel with or without Ramucirumab]*/
+regimen_1EGFR tyrosine kinase inhibitors (TKI)
+[Erlotinib, Gefitinib, Afatinib, Dacomitinib, Osimertinib]
+regimen_2Other TKIs
+[Crizotinib, Ceritinib, Brigatinib, Alectinib, Lorlatinib,
+Entrectinib,, Capmatinib, Selpercatinib, Pralsetinib,
+Vandetanib, Cabozantinib, Lenvatinib, Larotrectinib,
+Dabrafenib+Trametinib]
+regimen_3Immune checkpoint inhibitors
+(anti-PD1/L1, anti-CTLA-4 or both)
+regimen_4Immune checkpoint inhibitors
+(anti-PD1/L1) and platinum doublet
+chemotherapy with or without anti-VEGF
+monoclonal antibody (mAb) or dual immune
+checkpoint inhibitors (anti-PD1 and anti-CTLA-4)
+and platinum doublet chemotherapy
+regimen_5Platinum doublet chemotherapy
+with or without anti-VEGF mAb
+regimen_6Single agent chemotherapy with
+or without anti-VEGF mAb [Pemetrexed
+with or without Bevacizumab, Docetaxel
+with or without Ramucirumab]
+*/
 WITH cte AS (SELECT cohort_definition_id,
                     person_id,
                     Line_of_therapy,
                     regimen,
-                    (CASE WHEN regimen in ('erlotinib',
-                                          'gefitinib',
-                                          'afatinib',
-                                          'dacomitinib',
-                                          'osimertinib')
+                    (CASE WHEN regimen LIKE '%erlotinib%'OR
+                     regimen LIKE '%gefitinib%'OR
+                     regimen LIKE '%afatinib%'OR
+                     regimen LIKE '%dacomitinib%'OR
+                     regimen LIKE '%osimertinib%'
+
                             then 1 else 0 end) AS EGFR_tyrosine_kinase_inhibitors,
 
-                    (CASE WHEN regimen in ('crizotinib', 'ceritinib',
-                              'brigatinib', 'alectinib',
-                              'lorlatinib', 'entrectinib',
-                              'capmatinib', 'selpercatinib',
-                              'pralsetinib', 'vandetanib',
-                              'cabozantinib', 'lenvatinib',
-                              'larotrectinib') OR regimen like ('%dabrafenib%trametinib%')
+                    (CASE WHEN regimen LIKE
+                    '%crizotinib%'OR
+                    regimen LIKE '%ceritinib%'OR
+                    regimen LIKE '%brigatinib%'OR
+                    regimen LIKE '%alectinib%'OR
+                    regimen LIKE '%lorlatinib%'OR
+                    regimen LIKE '%entrectinib%'OR
+                    regimen LIKE '%capmatinib%'OR
+                    regimen LIKE '%selpercatinib%'OR
+                    regimen LIKE '%pralsetinib%'OR
+                    regimen LIKE '%vandetanib%'OR
+                    regimen LIKE '%cabozantinib%'OR
+                    regimen LIKE '%lenvatinib%'OR
+                    regimen LIKE '%larotrectinib%'
+                    OR regimen LIKE '%dabrafenib%trametinib%'
+
                           then 1 else 0 end) AS Other_EGFR_tyrosine_kinase_inhibitors,
 
-                   ( CASE WHEN regimen in ('pembrolizumab', 'nivolumab', 'dostarlimab') then 1
+                   ( CASE WHEN regimen LIKE
+                   regimen LIKE '%pembrolizumab%' OR
+                   regimen LIKE '%nivolumab%' OR
+                   regimen LIKE '%dostarlimab%'
+                    then 1
                           else 0 end) AS Anti_PD_1,
 
-                    (CASE  WHEN regimen in ('atezolizumab', 'avelumab', 'durvalumab') then 1
+                    (CASE  WHEN regimen LIKE
+                    '%atezolizumab%'OR
+                    regimen LIKE '%avelumab%'OR
+                    regimen LIKE '%durvalumab%'
+                     then 1
                           else 0 end) AS Anti_L_1,
 
-                    (CASE WHEN regimen in ('ipilimumab') then 1 else 0 end) AS Anti_CTLA_4,
+                    (CASE WHEN regimen LIKE
+                    '%ipilimumab%'
+                     then 1 else 0 end) AS Anti_CTLA_4,
 
-                    (CASE  WHEN regimen in ('cisplatin', 'carboplatin') then 1
+                    (CASE  WHEN
+                    regimen LIKE '%cisplatin%' OR
+                    regimen LIKE '%carboplatin%'
+                     then 1
                           else 0 end) AS Platinum_doublet,
 
-                    (CASE  WHEN regimen in ('%pemetrexed%docetaxel%') then 1
+                    (CASE  WHEN regimen LIKE
+                    '%docetaxel%pemetrexed%'
+                     then 1
                           else 0 end) AS Single_agent,
 
-                    (CASE  WHEN regimen in ('bevacizumab','ranibizumab','aflibercept','ramucirumab')
+                    (CASE  WHEN regimen LIKE
+                    '%bevacizumab%'OR
+                    regimen LIKE '%ranibizumab%'OR
+                    regimen LIKE '%aflibercept%'OR
+                    regimen LIKE '%ramucirumab%'
+
                           then 1 else 0 end) AS anti_VEGF_mAb
 
            FROM @cohortDatabaseSchema.@regimenStatsTable
