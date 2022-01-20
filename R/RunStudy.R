@@ -29,7 +29,7 @@ runStudy <- function(connectionDetails,
     exportFolder,
     "NSCLCCharacterization.txt"
   ))
-  #on.exit(ParallelLogger::unregisterLogger("DEFAULT"))
+  on.exit(ParallelLogger::unregisterLogger("DEFAULT"))
 
   # Write out the system information
   ParallelLogger::logInfo(.systemInfo())
@@ -75,7 +75,8 @@ runStudy <- function(connectionDetails,
       connectionDetails = connectionDetails,
       cohortDatabaseSchema = cohortDatabaseSchema,
       regimenStatsTable = regimenStatsTable,
-      targetIds = targetIdsTreatmentIndex
+      targetIds = targetIdsTreatmentIndex,
+      databaseId = databaseId
     )
 
     writeToCsv(categorizedRegimens, file.path(

@@ -46,7 +46,8 @@ createRegimenStats <- function(connectionDetails,
 createCategorizedRegimensTable <- function(connectionDetails,
                                            cohortDatabaseSchema,
                                            regimenStatsTable,
-                                           targetIds) {
+                                           targetIds,
+                                           databaseId) {
   packageName <- getThisPackageName()
   sqlFileName <- "RegimenCategories.sql"
   pathToSql <- system.file("sql", "sql_server",
@@ -67,9 +68,17 @@ createCategorizedRegimensTable <- function(connectionDetails,
     targetDialect = connectionDetails$dbms
   )
   connection <- DatabaseConnector::connect(connectionDetails = connectionDetails)
-  as.data.frame(DatabaseConnector::querySql(
+  categories <- DatabaseConnector::querySql(
     connection = connection,
     sql = sqlTmp,
     snakeCaseToCamelCase = T
-  ))
+  )
+
+  data.frame(
+    targetId = categories$cohortDefinitionId,
+    personId = categories$personId,
+    lineOfTherapy = categories$lineOfTherapy,
+    regimen = categories$regimen,
+    databaseId = databaseId
+  )
 }
